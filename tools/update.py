@@ -113,6 +113,19 @@ def thumb(s, pid):
     return 'data:image/webp;base64,' + base64.b64encode(b.getvalue()).decode()
 
 
+# ---------------- 담배 판별 (항상 제외) ----------------
+TOBACCO_VENDORS = ('KT&G', '케이티앤지', '필립모리스', '브리티쉬', '아메리칸토바코', 'BAT코리아', '재팬토바코', 'JTI', '토바코')
+TOBACCO_WORDS = re.compile(r'에쎄|레종|보헴|말보로|던힐|메비우스|팔리아멘트|디스플러스|더원|테리아|히츠|아이코스|릴하이브리드|담배|시가(?!렛)|cigar', re.I)
+
+
+def is_tobacco(it):
+    if any(v in it['v'] for v in TOBACCO_VENDORS):
+        return True
+    if re.search(r'\d+\s*개[비피]', it['s']):
+        return True
+    return bool(TOBACCO_WORDS.search(it['n']))
+
+
 # ---------------- 분류 (비슷한 이름의 기존 상품 분류를 따름) ----------------
 def grams(t):
     t = re.sub(r'\((영외|동계|공군|해군)\)|규격\(\d+\)|[^0-9a-z가-힣]', '', t.lower())
@@ -164,10 +177,14 @@ def main(scrape=None):
 
     known = [(grams(i['n']), i['c'], i['v']) for i in old['items'] if i['c'] != '기타']
     items, seen, added = [], set(), []
+    tobacco = 0
     for it in all_items:
         if it['id'] in seen:
             continue
         seen.add(it['id'])
+        if is_tobacco(it):
+            tobacco += 1
+            continue
         prev = old_by_id.get(it['id'])
         c = prev['c'] if prev else guess_cat(it, known)
         if c == '담배':
@@ -177,9 +194,9 @@ def main(scrape=None):
         items.append({'id': it['id'], 'v': it['v'], 'n': it['n'], 's': it['s'], 'p': it['p'],
                       'new': 1 if it['id'] in new_ids else 0, 'out': 1 if '(영외)' in it['n'] else 0,
                       'q': query_name(it['n']), 'c': c})
-    removed = len(set(old_by_id) - seen)
+    removed = len(set(old_by_id) - seen - {i['id'] for i in all_items if is_tobacco(i)})
     changed = sum(1 for i in items if i['id'] in old_by_id and old_by_id[i['id']]['p'] != i['p'])
-    log('최종', len(items), '개 | 새 상품', len(added), '| 판매종료', removed, '| 가격변경', changed)
+    log('최종', len(items), '개 | 새 상품', len(added), '| 판매종료', removed, '| 가격변경', changed, '| 담배 제외', tobacco)
     for n, c in added[:30]:
         log('  +', c, '|', n)
 
