@@ -18,6 +18,7 @@ BASE = 'https://www.welfare.mil.kr'
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, 'data')
 MIN_ITEMS = 1000          # 이보다 적게 수집되면 실패로 보고 기존 데이터 유지
+REFRESH_PER_MONTH = 300   # 매달 새로 받는 기존 상품 사진 수 (약 8개월에 한 바퀴)
 UA = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Mobile Safari/537.36'
 
 
@@ -200,15 +201,32 @@ def main(scrape=None):
     for n, c in added[:30]:
         log('  +', c, '|', n)
 
-    thumbs = {}
+    # 사진: 새 상품은 항상 받고, 기존 상품은 매달 REFRESH_PER_MONTH개씩 돌아가며 새로 받음
+    now = datetime.datetime.utcnow() + datetime.timedelta(hours=9)
+    ids_sorted = sorted(i['id'] for i in items if i['id'] in old_thumbs)
+    groups = max(1, -(-len(ids_sorted) // REFRESH_PER_MONTH))
+    g = (now.year * 12 + now.month) % groups
+    refresh = set(ids_sorted[g * REFRESH_PER_MONTH:(g + 1) * REFRESH_PER_MONTH])
+    log('사진 새로 받기: %d개 묶음 중 %d번째 (%d개)' % (groups, g + 1, len(refresh)))
+    thumbs, got_new, refreshed, failed = {}, 0, 0, 0
     for it in items:
-        if it['id'] in old_thumbs:
-            thumbs[it['id']] = old_thumbs[it['id']]
-        elif not scrape:
+        pid = it['id']
+        need = pid not in old_thumbs or pid in refresh
+        if need and not scrape:
             try:
-                thumbs[it['id']] = thumb(s, it['id'])
+                thumbs[pid] = thumb(s, pid)
+                if pid in old_thumbs:
+                    refreshed += 1
+                else:
+                    got_new += 1
+                time.sleep(0.15)
+                continue
             except Exception as e:
-                log('  사진 실패', it['id'], e)
+                failed += 1
+                log('  사진 실패', pid, e)
+        if pid in old_thumbs:
+            thumbs[pid] = old_thumbs[pid]          # 실패하거나 이번 달 대상이 아니면 기존 사진 유지
+    log('사진: 새 상품 %d, 갱신 %d, 실패 %d (실패한 것은 기존 사진 유지)' % (got_new, refreshed, failed))
 
     today = (datetime.datetime.utcnow() + datetime.timedelta(hours=9)).strftime('%Y-%m-%d')
     out = {'updated': today, 'cats': cats, 'items': items, 'config': old.get('config', {})}
@@ -218,7 +236,8 @@ def main(scrape=None):
             os.path.join(DATA, 't%d.bin' % k))
     meta['ver'] = int(time.time())
     json.dump(meta, open(os.path.join(DATA, 'meta.json'), 'w'))
-    summary = '상품 %d개 (새 상품 %d, 판매종료 %d, 가격변경 %d) · 기준일 %s' % (len(items), len(added), removed, changed, today)
+    summary = ('상품 %d개 (새 상품 %d, 판매종료 %d, 가격변경 %d, 담배 제외 %d) · 사진 갱신 %d · 기준일 %s'
+               % (len(items), len(added), removed, changed, tobacco, refreshed, today))
     log(summary)
     gs = os.environ.get('GITHUB_STEP_SUMMARY')
     if gs:
