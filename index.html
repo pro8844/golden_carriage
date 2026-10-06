@@ -1,0 +1,2448 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>황금마차</title>
+  <link rel="icon" href="mascot.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="theme-color" content="#b5452a">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <style>
+    :root {
+      --color-bg: #f6ecdc;
+      --color-fg: #3a2618;
+      --color-border: #ead8bd;
+      --color-text-secondary: #8a6a52;
+      --color-card: #fffaf1;
+      --color-muted: #8a6a52;
+      --color-maple: #b5452a;
+      --color-burnt-orange: #c96a28;
+      --color-mustard: #d8a23a;
+      --color-olive: #6b7a3a;
+      --color-accent: #b5452a;
+      --color-accent-light: #fff5e6;
+      --color-badge-new: #d8a23a;
+      --color-badge-out: #b5452a;
+      --color-red: #d32f2f;
+      --spacing: 16px;
+      --radius: 14px;
+      --color-bar: rgba(255, 248, 236, 0.92);
+      --grain-1: rgba(255, 248, 236, 0.4);
+      --grain-2: rgba(232, 218, 189, 0.3);
+      --font-serif: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+      --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --color-bg: #1c1410;
+        --color-fg: #f1e3cf;
+        --color-border: #3d2c20;
+        --color-text-secondary: #c2a68a;
+        --color-card: #2a1f18;
+        --color-muted: #c2a68a;
+        --color-maple: #d0603f;
+        --color-burnt-orange: #e0953a;
+        --color-mustard: #e0953a;
+        --color-olive: #a8b368;
+        --color-accent-light: #3d2c20;
+        --color-bar: rgba(28, 20, 16, 0.92);
+        --grain-1: rgba(120, 60, 30, 0.10);
+        --grain-2: rgba(90, 40, 20, 0.12);
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --color-bg: #1c1410;
+      --color-fg: #f1e3cf;
+      --color-border: #3d2c20;
+      --color-text-secondary: #c2a68a;
+      --color-card: #2a1f18;
+      --color-muted: #c2a68a;
+      --color-maple: #d0603f;
+      --color-burnt-orange: #e0953a;
+      --color-mustard: #e0953a;
+      --color-olive: #a8b368;
+      --color-accent-light: #3d2c20;
+      --color-bar: rgba(28, 20, 16, 0.92);
+      --grain-1: rgba(120, 60, 30, 0.10);
+      --grain-2: rgba(90, 40, 20, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-sans);
+      background: var(--color-bg);
+      background-image:
+        radial-gradient(circle at 20% 50%, var(--grain-1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, var(--grain-2) 0%, transparent 50%),
+        linear-gradient(135deg, rgba(212, 165, 116, 0.05) 0%, transparent 100%);
+      color: var(--color-fg);
+      line-height: 1.5;
+      font-size: 16px;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: linear-gradient(135deg, #6e2a1c 0%, #b5452a 50%, #d98a2b 100%);
+      border-bottom: 1px solid rgba(181, 69, 42, 0.3);
+      padding: var(--spacing);
+      padding-bottom: calc(var(--spacing) * 1.2);
+      border-radius: 0 0 20px 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .header-title, .header-subtitle, .header-tagline { position: relative; z-index: 1; }
+
+    .header-title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .brand-logo {
+      flex-shrink: 0;
+      animation: bobbing 3s ease-in-out infinite;
+    }
+
+    @keyframes bobbing {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .brand-logo {
+        animation: none;
+      }
+    }
+
+    .header-title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      font-family: var(--font-serif);
+      color: white;
+      letter-spacing: -0.5px;
+    }
+
+    .header-subtitle {
+      margin: 8px 0 0 0;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 400;
+    }
+
+    .header-tagline {
+      margin: 2px 0 0 0;
+      font-size: 11px;
+      font-style: italic;
+      font-family: var(--font-sans);
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 300;
+    }
+
+    /* Falling leaves animation */
+    @keyframes fall {
+      0%   { transform: translate(0, -30px) rotate(0deg); opacity: 0; }
+      10%  { opacity: .85; }
+      30%  { transform: translate(var(--sway-amount, 12px), 30px) rotate(110deg); }
+      55%  { transform: translate(0, 85px) rotate(200deg); }
+      80%  { transform: translate(var(--sway-amount, 12px), 140px) rotate(290deg); opacity: .7; }
+      100% { transform: translate(var(--drift, 0), 190px) rotate(360deg); opacity: 0; }
+    }
+
+    .header-leaf {
+      position: absolute;
+      top: 0;
+      z-index: 0;
+      font-size: 18px;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .header-leaf:nth-of-type(1) {
+      left: 10%;
+      animation: fall 10s ease-in-out infinite;
+      --drift: 20px;
+      --sway-amount: 15px;
+      animation-delay: 0s;
+    }
+
+    .header-leaf:nth-of-type(2) {
+      left: 25%;
+      animation: fall 12s ease-in-out infinite;
+      --drift: -15px;
+      --sway-amount: -12px;
+      animation-delay: 2s;
+    }
+
+    .header-leaf:nth-of-type(3) {
+      left: 45%;
+      animation: fall 11s ease-in-out infinite;
+      --drift: 25px;
+      --sway-amount: 10px;
+      animation-delay: 4s;
+    }
+
+    .header-leaf:nth-of-type(4) {
+      left: 65%;
+      animation: fall 13s ease-in-out infinite;
+      --drift: -20px;
+      --sway-amount: -15px;
+      animation-delay: 1s;
+    }
+
+    .header-leaf:nth-of-type(5) {
+      left: 80%;
+      animation: fall 10.5s ease-in-out infinite;
+      --drift: 18px;
+      --sway-amount: 8px;
+      animation-delay: 3s;
+    }
+
+    .header-leaf:nth-of-type(6) {
+      left: 15%;
+      animation: fall 11.5s ease-in-out infinite;
+      --drift: -22px;
+      --sway-amount: -10px;
+      animation-delay: 5s;
+    }
+
+    .header-leaf:nth-of-type(7) {
+      left: 55%;
+      animation: fall 12s ease-in-out infinite;
+      --drift: 20px;
+      --sway-amount: 12px;
+      animation-delay: 2.5s;
+    }
+
+    .header-leaf:nth-of-type(8) {
+      left: 35%;
+      animation: fall 10.5s ease-in-out infinite;
+      --drift: -18px;
+      --sway-amount: -8px;
+      animation-delay: 4.5s;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .header-leaf {
+        display: none;
+      }
+    }
+
+    .controls {
+      position: sticky;
+      top: 0;
+      z-index: 99;
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--spacing);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .category-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+
+    .category-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .category-chip {
+      padding: 7px 14px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 20px;
+      background: var(--color-card);
+      color: var(--color-fg);
+      cursor: pointer;
+      font-size: 12px;
+      font-family: var(--font-sans);
+      white-space: nowrap;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .category-chip.active {
+      background: linear-gradient(135deg, var(--color-maple) 0%, var(--color-burnt-orange) 100%);
+      color: white;
+      border-color: var(--color-maple);
+      box-shadow: 0 2px 8px rgba(181, 69, 42, 0.25);
+    }
+
+    .category-header {
+      margin: 18px 0 8px;
+      padding: 6px 2px 8px 2px;
+      font-size: 17px;
+      font-weight: 700;
+      font-family: var(--font-serif);
+      color: var(--color-fg);
+      border-bottom: 2px dashed;
+      border-image: linear-gradient(90deg, var(--color-maple) 0%, var(--color-mustard) 50%, transparent 100%) 1;
+      letter-spacing: -0.3px;
+    }
+
+    .category-header::before {
+      content: '🍂 ';
+      margin-right: 4px;
+      opacity: 0.8;
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 12px 12px 12px 38px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 16px;
+      font-size: 16px;
+      font-family: var(--font-sans);
+      background: var(--color-card);
+      color: var(--color-fg);
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238a6a52"><path d="M15.5 14h-.79l-.28-.27a6.47 6.47 0 0 0 1.48-5.34c-.47-2.78-2.79-5-5.59-5-3.12 0-5.63 2.51-5.63 5.63s2.51 5.63 5.63 5.63c2.07 0 3.87-1.13 4.85-2.8l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-5.87 0C7.6 14 5.98 12.37 5.98 10.5S7.6 7 9.63 7c2.03 0 3.65 1.63 3.65 3.5S11.66 14 9.63 14z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: 10px center;
+      background-size: 20px 20px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-box:focus {
+      outline: none;
+      border-color: var(--color-mustard);
+      box-shadow: 0 0 0 3px rgba(216, 162, 58, 0.1);
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .chip {
+      padding: 7px 14px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 20px;
+      background: var(--color-card);
+      color: var(--color-fg);
+      cursor: pointer;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      white-space: nowrap;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .chip.active {
+      background: linear-gradient(135deg, var(--color-maple) 0%, var(--color-burnt-orange) 100%);
+      color: white;
+      border-color: var(--color-maple);
+      box-shadow: 0 2px 8px rgba(181, 69, 42, 0.25);
+    }
+
+    .sort-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .sort-row label {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+    }
+
+    .sort-select {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 16px;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      background: var(--color-card);
+      color: var(--color-fg);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sort-select:focus {
+      outline: none;
+      border-color: var(--color-mustard);
+      box-shadow: 0 0 0 3px rgba(216, 162, 58, 0.1);
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--spacing);
+      padding-bottom: calc(90px + var(--spacing));
+    }
+
+    .result-count {
+      font-size: 12px;
+      font-family: var(--font-sans);
+      color: var(--color-text-secondary);
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    .card {
+      border: 1px solid var(--color-border);
+      border-left: 4px solid var(--color-maple);
+      border-radius: 16px;
+      padding: var(--spacing);
+      margin-bottom: 12px;
+      background: var(--color-card);
+      transition: all 0.2s;
+      box-shadow: 0 2px 10px rgba(120, 70, 30, 0.08);
+    }
+
+    .card:nth-of-type(even) {
+      border-left-color: var(--color-burnt-orange);
+    }
+
+    .card.in-cart {
+      background: var(--color-card);
+      border: 2px solid var(--color-mustard);
+      border-left: 4px solid var(--color-mustard);
+      box-shadow: 0 0 12px rgba(216, 162, 58, 0.2);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .card-name {
+      font-weight: 600;
+      font-size: 15px;
+      font-family: var(--font-sans);
+      flex: 1;
+      color: var(--color-fg);
+      word-break: break-word;
+      letter-spacing: -0.2px;
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+
+    .badge-new {
+      background: var(--color-mustard);
+      color: var(--color-fg);
+      font-weight: 600;
+      border-radius: 8px;
+      font-family: var(--font-sans);
+    }
+
+    .badge-out {
+      background: var(--color-maple);
+      color: white;
+      font-weight: 600;
+      border-radius: 8px;
+      font-family: var(--font-sans);
+    }
+
+    .card-meta {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .card-price {
+      font-size: 18px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      font-family: var(--font-sans);
+      color: var(--color-maple);
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+    }
+
+    .card-qty {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .qty-btn {
+      width: 36px;
+      height: 36px;
+      border: 1.5px solid var(--color-border);
+      background: var(--color-card);
+      color: var(--color-fg);
+      cursor: pointer;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-family: var(--font-sans);
+    }
+
+    .qty-btn:nth-of-type(3) {
+      background: var(--color-burnt-orange);
+      color: white;
+      border-color: var(--color-burnt-orange);
+      box-shadow: 0 2px 8px rgba(201, 106, 40, 0.2);
+    }
+
+    .qty-btn:nth-of-type(3):active {
+      box-shadow: 0 1px 4px rgba(201, 106, 40, 0.3);
+    }
+
+    .qty-display {
+      min-width: 30px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .search-links {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      font-size: 11px;
+    }
+
+    .search-link {
+      padding: 6px 10px;
+      border: 1px solid var(--color-olive);
+      border-radius: 10px;
+      background: transparent;
+      color: var(--color-olive);
+      text-decoration: none;
+      cursor: pointer;
+      font-size: 11px;
+      font-family: var(--font-sans);
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .search-link:active {
+      background: var(--color-accent-light);
+      border-color: var(--color-maple);
+      color: var(--color-maple);
+    }
+
+    .load-more-btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin: 12px 0;
+      border: 1.5px solid var(--color-border);
+      background: var(--color-card);
+      color: var(--color-maple);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      border-radius: 16px;
+      transition: all 0.2s;
+    }
+
+    .load-more-btn:active {
+      background: var(--color-accent-light);
+    }
+
+    .cart-bar {
+      display: none;
+    }
+
+    .floating-cart-btn {
+      position: fixed;
+      right: 14px;
+      bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-maple) 0%, var(--color-burnt-orange) 100%);
+      border: none;
+      cursor: pointer;
+      z-index: 50;
+      box-shadow: 0 4px 12px rgba(181, 69, 42, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      padding: 0;
+    }
+
+    .floating-cart-btn:active {
+      box-shadow: 0 2px 6px rgba(181, 69, 42, 0.4);
+    }
+
+    .floating-cart-btn.bounce {
+      animation: cartBounce 0.4s ease-out;
+    }
+
+    @keyframes cartBounce {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--color-mustard);
+      color: var(--color-fg);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-sans);
+    }
+
+    .cart-badge.show {
+      display: flex;
+    }
+
+    .cart-total-pill {
+      position: absolute;
+      right: 66px;
+      top: 50%;
+      transform: translateY(-50%);
+      box-shadow: 0 2px 8px rgba(120,70,30,.18);
+      background: var(--color-mustard);
+      color: var(--color-fg);
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      white-space: nowrap;
+      display: none;
+    }
+
+    .cart-total-pill.show {
+      display: block;
+    }
+
+    .zoom-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 210;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .zoom-modal.open {
+      display: flex;
+    }
+
+    .zoom-content {
+      background: var(--color-bg);
+      border-radius: 20px;
+      padding: 20px;
+      max-width: 100%;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: zoomIn 0.2s ease-out;
+      position: relative;
+    }
+
+    @keyframes zoomIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .zoom-close-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: var(--color-fg);
+      padding: 0;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .zoom-image-area {
+      max-width: 320px;
+      max-height: 320px;
+      width: 100%;
+      height: auto;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .zoom-image-area img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .zoom-details {
+      text-align: center;
+    }
+
+    .zoom-name {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-fg);
+      margin-bottom: 8px;
+      word-break: break-word;
+    }
+
+    .zoom-badges {
+      display: flex;
+      gap: 4px;
+      justify-content: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .zoom-meta {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .zoom-price {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-maple);
+      margin-bottom: 12px;
+    }
+
+    .zoom-qty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .zoom-links {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .cart-sheet {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+    }
+
+    .cart-sheet.open {
+      display: flex;
+    }
+
+    .cart-sheet-inner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--color-bg);
+      background-image:
+        radial-gradient(circle at 20% 50%, rgba(255, 248, 236, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(232, 218, 189, 0.3) 0%, transparent 50%);
+      display: flex;
+      flex-direction: column;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .cart-header {
+      padding: var(--spacing);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cart-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-family: var(--font-serif);
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .cart-header h2::before {
+      content: '🧺 ';
+      margin-right: 6px;
+    }
+
+    .cart-close {
+      background: none;
+      border: none;
+      color: var(--color-fg);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .cart-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--spacing);
+    }
+
+    .cart-item {
+      border: 1px solid var(--color-border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 12px;
+      background: var(--color-card);
+      display: flex;
+      gap: 12px;
+      box-shadow: 0 1px 6px rgba(120, 70, 30, 0.06);
+    }
+
+    .cart-item-thumb {
+      flex-shrink: 0;
+      width: 56px;
+      height: 56px;
+      border-radius: 10px;
+      background: white;
+      border: 1px solid var(--color-border);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cart-item-thumb .thumb-wrap {
+      width: 56px;
+      height: 56px;
+    }
+
+    .cart-item-thumb .thumb-wrap.noimg::after {
+      content: "🍂";
+      font-size: 24px;
+      opacity: 0.55;
+    }
+
+    .cart-item-content {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cart-item-name {
+      font-weight: 600;
+      color: var(--color-fg);
+      word-break: break-word;
+    }
+
+    .cart-item-spec {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+
+    .cart-item-price {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+    }
+
+    .cart-item-qty {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cart-item-total {
+      font-weight: 600;
+      color: var(--color-accent);
+      font-size: 15px;
+    }
+
+    .cart-item-remove {
+      text-align: right;
+    }
+
+    .remove-btn {
+      background: none;
+      border: none;
+      color: var(--color-red);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0;
+    }
+
+    .cart-summary {
+      border-top: 2px solid var(--color-border);
+      padding-top: 12px;
+      margin-top: 12px;
+      font-size: 14px;
+      color: var(--color-fg);
+    }
+
+    .cart-summary-line {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .cart-summary-total {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-accent);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .cart-footer {
+      padding: var(--spacing);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      font-weight: 600;
+    }
+
+    .form-input, .form-textarea {
+      padding: 11px 12px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: var(--font-sans);
+      background: var(--color-card);
+      color: var(--color-fg);
+      transition: all 0.2s;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--color-mustard);
+      box-shadow: 0 0 0 3px rgba(216, 162, 58, 0.1);
+    }
+
+    .form-textarea {
+      resize: none;
+      height: 60px;
+    }
+
+    .receiver-info {
+      font-size: 12px;
+      font-family: var(--font-sans);
+      color: var(--color-text-secondary);
+      padding: 10px 12px;
+      background: var(--color-accent-light);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      border: 1px solid var(--color-border);
+    }
+
+    .action-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btns button {
+      flex: 1;
+      padding: 12px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 12px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .btn-clear {
+      background: var(--color-card);
+      color: var(--color-fg);
+      border-color: var(--color-border);
+    }
+
+    .btn-clear:active {
+      background: var(--color-accent-light);
+    }
+
+    .btn-copy {
+      background: linear-gradient(135deg, var(--color-maple) 0%, var(--color-burnt-orange) 100%);
+      color: white;
+      border-color: var(--color-maple);
+      box-shadow: 0 2px 6px rgba(181, 69, 42, 0.15);
+    }
+
+    .btn-copy:active {
+      box-shadow: 0 1px 3px rgba(181, 69, 42, 0.2);
+    }
+
+    .btn-send {
+      background: linear-gradient(135deg, var(--color-maple) 0%, var(--color-burnt-orange) 100%);
+      color: white;
+      width: 100%;
+      padding: 14px;
+      font-size: 15px;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      border: none;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(181, 69, 42, 0.2);
+      transition: all 0.2s;
+      letter-spacing: -0.2px;
+    }
+
+    .btn-send:active:not(:disabled) {
+      box-shadow: 0 1px 4px rgba(181, 69, 42, 0.3);
+    }
+
+    .btn-send:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      z-index: 300;
+      animation: fadeInOut 2s ease-in-out;
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% { opacity: 0; }
+      10%, 90% { opacity: 1; }
+    }
+
+    .confirm-dialog {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 250;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .confirm-dialog.open {
+      display: flex;
+    }
+
+    .confirm-box {
+      background: var(--color-bg);
+      border-radius: 16px;
+      padding: var(--spacing);
+      max-width: 300px;
+      text-align: center;
+      border: 1px solid var(--color-border);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .confirm-message {
+      margin-bottom: 16px;
+      color: var(--color-fg);
+      font-size: 14px;
+      font-family: var(--font-sans);
+    }
+
+    .confirm-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .confirm-buttons button {
+      flex: 1;
+      padding: 11px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .confirm-cancel {
+      background: var(--color-card);
+      color: var(--color-fg);
+      border-color: var(--color-border);
+    }
+
+    .confirm-cancel:active {
+      background: var(--color-accent-light);
+    }
+
+    .confirm-ok {
+      background: var(--color-maple);
+      color: white;
+      border-color: var(--color-maple);
+      box-shadow: 0 2px 6px rgba(181, 69, 42, 0.15);
+    }
+
+    .confirm-ok:active {
+      box-shadow: 0 1px 3px rgba(181, 69, 42, 0.2);
+    }
+
+    @media (max-width: 360px) {
+      :root {
+        --spacing: 12px;
+      }
+      body {
+        font-size: 15px;
+      }
+    }
+
+    .decorative-footer {
+      text-align: center;
+      padding: 16px 0;
+      margin-top: 8px;
+      font-size: 14px;
+      color: var(--color-muted);
+      opacity: 0.6;
+    }
+
+    /* ---- 컴팩트 카드 (썸네일 + 가로 배치) ---- */
+    .card { padding: 10px 12px !important; margin-bottom: 8px !important; }
+    .c-row { display: flex; gap: 12px; align-items: flex-start; }
+    .thumb-wrap { flex: 0 0 76px; width: 76px; height: 76px; border-radius: 12px; background: #fff; border: 1px solid var(--color-border); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .thumb-wrap .thumb { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .thumb-wrap.noimg::after { content: "🍂"; font-size: 26px; opacity: .55; }
+    .c-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .c-body .card-name { font-size: 14.5px; line-height: 1.3; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .c-body .card-meta { font-size: 11.5px; margin: 0; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .c-body .card-meta .badge { font-size: 10px; padding: 1px 6px; margin-right: 4px; vertical-align: 1px; }
+    .c-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; }
+    .c-bottom .card-price { font-size: 16.5px; margin: 0; }
+    .c-bottom .card-qty { margin: 0; gap: 6px; }
+    .c-bottom .qty-btn { width: 32px !important; height: 32px !important; min-width: 32px; min-height: 32px; font-size: 16px; padding: 0; }
+    .c-bottom .qty-display { min-width: 18px; font-size: 15px; }
+    .c-body .search-links { margin: 2px 0 0; gap: 4px; flex-wrap: nowrap; overflow-x: auto; }
+    .c-body .search-link { font-size: 10.5px; padding: 2px 8px; min-height: 0; line-height: 1.5; }
+    @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .thumb-wrap { background: #f3e9da; } }
+
+    /* Two-column layout for larger screens */
+    @media (min-width: 600px) {
+      .container {
+        max-width: 1100px;
+      }
+
+      #productList {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .category-header {
+        grid-column: 1 / -1;
+      }
+
+      .load-more-btn {
+        grid-column: 1 / -1;
+      }
+
+      .decorative-footer {
+        grid-column: 1 / -1;
+      }
+
+      .card {
+        margin-bottom: 0;
+      }
+
+      .cart-sheet-inner {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: auto;
+        bottom: 0;
+        max-width: 480px;
+        width: 100%;
+        border-radius: 0;
+        animation: slideInRight 0.3s ease-out;
+      }
+
+      @keyframes slideInRight {
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
+      }
+    }
+
+    /* ---- 가독성 (Pretendard) ---- */
+    body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
+    .header-title { font-weight: 800; letter-spacing: -0.02em; }
+    .header-tagline { font-style: normal; }
+    .card-name, .c-body .card-name { font-weight: 600; letter-spacing: -0.02em; }
+    .card-price, .c-bottom .card-price { font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .c-body .card-meta { font-size: 12px; }
+    .category-header { font-weight: 700; letter-spacing: -0.02em; }
+    input, select, textarea, button { font-family: inherit; }
+
+    /* ---- 버전 표시 (왼쪽 아래 모퉁이) ---- */
+    .app-version { position: fixed; left: 10px; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); z-index: 40; font-size: 10.5px; font-weight: 500; color: var(--color-text-secondary); background: var(--color-bar, rgba(255,248,236,.9)); border: 1px solid var(--color-border); padding: 2px 8px; border-radius: 999px; opacity: .85; pointer-events: none; font-variant-numeric: tabular-nums; }
+
+    input[type="search"]::-webkit-search-decoration, input[type="search"]::-webkit-search-results-decoration { -webkit-appearance: none; }
+    input[type="search"] { -webkit-appearance: none; appearance: none; }
+
+    /* ---- 잠금 화면 ---- */
+    .lock-screen { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 24px;
+      background: radial-gradient(circle at 30% 20%, #e9a05b 0%, #b5452a 45%, #5e2318 100%); }
+    .lock-screen[hidden] { display: none; }
+    .lock-card { width: 100%; max-width: 340px; background: var(--color-card); border-radius: 22px; padding: 28px 22px 20px; text-align: center;
+      box-shadow: 0 18px 50px rgba(60,20,10,.35); display: flex; flex-direction: column; gap: 10px; }
+    .lock-logo { margin: 0 auto; animation: bob 3s ease-in-out infinite; }
+    .lock-title { margin: 0; font-size: 26px; font-weight: 800; color: var(--color-fg); letter-spacing: -0.02em; }
+    .lock-sub { margin: 0 0 6px; font-size: 13.5px; color: var(--color-text-secondary); }
+    .lock-input { width: 100%; font-size: 17px; padding: 13px 14px; border-radius: 12px; border: 1.5px solid var(--color-border); background: var(--color-bg); color: var(--color-fg); text-align: center; }
+    .lock-input:focus { outline: none; border-color: var(--color-mustard); box-shadow: 0 0 0 3px rgba(216,162,58,.25); }
+    .lock-remember { font-size: 13px; color: var(--color-text-secondary); display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .lock-btn { margin-top: 4px; padding: 13px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer;
+      background: linear-gradient(135deg, var(--color-maple), var(--color-burnt-orange)); }
+    .lock-btn:disabled { opacity: .7; }
+    .lock-msg { min-height: 18px; margin: 2px 0 0; font-size: 13px; color: #c62828; }
+    .lock-now { position: absolute; top: 14px; right: 14px; z-index: 2; background: rgba(255,255,255,.18); border: none; border-radius: 999px; width: 34px; height: 34px; font-size: 15px; cursor: pointer; }
+    @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+    @media (prefers-reduced-motion: reduce) { .lock-logo { animation: none; } }
+  </style>
+</head>
+<body>
+  <div id="lockScreen" class="lock-screen" hidden>
+    <form id="lockForm" class="lock-card" autocomplete="off">
+      <img src="mascot.svg" alt="" class="lock-logo" width="96" height="96">
+      <h1 class="lock-title">황금마차</h1>
+      <p class="lock-sub">가족 전용이에요. 비밀번호를 입력해 주세요.</p>
+      <input id="lockPw" class="lock-input" type="password" inputmode="text" enterkeyhint="go" placeholder="비밀번호" autocomplete="current-password" aria-label="비밀번호">
+      <label class="lock-remember"><input type="checkbox" id="lockRemember" checked> 이 기기에서 기억하기</label>
+      <button id="lockBtn" class="lock-btn" type="submit">들어가기</button>
+      <p id="lockMsg" class="lock-msg" role="alert"></p>
+    </form>
+  </div>
+  <div class="container">
+    <div class="header">
+      <div class="header-title-row">
+        <img src="mascot.svg" class="brand-logo" alt="황금마차" width="52" height="52">
+        <h1 class="header-title">황금마차</h1>
+        <button type="button" class="lock-now" onclick="lockNow()" aria-label="잠그기" title="잠그기">🔒</button>
+      </div>
+      <p class="header-subtitle">가족 전용 · 재판매 금지 · 가격 기준일 <span id="updated-date">-</span></p>
+      <p class="header-tagline">깊어가는 가을, 필요한 것만 소담하게 담아요</p>
+      <span class="header-leaf" aria-hidden="true">🍁</span>
+      <span class="header-leaf" aria-hidden="true">🍂</span>
+      <span class="header-leaf" aria-hidden="true">🍁</span>
+      <span class="header-leaf" aria-hidden="true">🍂</span>
+      <span class="header-leaf" aria-hidden="true">🍁</span>
+      <span class="header-leaf" aria-hidden="true">🍂</span>
+      <span class="header-leaf" aria-hidden="true">🍁</span>
+      <span class="header-leaf" aria-hidden="true">🍂</span>
+    </div>
+
+    <div class="controls">
+      <form id="searchForm" action="#" role="search" onsubmit="return false;" style="margin:0"><input type="search" class="search-box" id="searchInput" placeholder="상품 이름, 업체명 검색" enterkeyhint="search" autocomplete="off" autocorrect="off" spellcheck="false"></form>
+      <div style="font-size:11px;color:var(--color-text-secondary);margin:-4px 0 4px 0;">초성(ㅊㅋㅍㅇ)·영문(coke) 검색 가능</div>
+      <div class="filter-row">
+        <button class="chip active" data-filter="all">전체</button>
+        <button class="chip" data-filter="out">영외</button>
+        <button class="chip" data-filter="new">2026 신규</button>
+        <button class="chip" data-filter="cart">장바구니 담은 것</button>
+      </div>
+      <div class="sort-row">
+        <label>분류:</label>
+        <select class="sort-select" id="sortSelect"></select>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="result-count" id="resultCount"></div>
+      <div id="productList"></div>
+      <button class="load-more-btn" id="loadMoreBtn" style="display:none;">더 보기</button>
+      <div class="decorative-footer" aria-hidden="true">🍂 · 🍁 · 🍂</div>
+    </div>
+  </div>
+
+  <button class="floating-cart-btn" id="floatingCartBtn" onclick="openCart()">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="9" cy="21" r="1"></circle>
+      <circle cx="20" cy="21" r="1"></circle>
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+    </svg>
+    <div class="cart-badge" id="cartBadge">0</div>
+    <div class="cart-total-pill" id="cartPill">0원</div>
+  </button>
+
+  <div class="zoom-modal" id="zoomModal">
+    <div class="zoom-content">
+      <button class="zoom-close-btn" onclick="closeZoom()">✕</button>
+      <div class="zoom-image-area" id="zoomImageArea"></div>
+      <div class="zoom-details">
+        <div class="zoom-name" id="zoomName"></div>
+        <div class="zoom-badges" id="zoomBadges"></div>
+        <div class="zoom-meta" id="zoomMeta"></div>
+        <div class="zoom-price" id="zoomPrice"></div>
+        <div class="zoom-qty" id="zoomQty"></div>
+        <div class="zoom-links" id="zoomLinks"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cart-sheet" id="cartSheet">
+    <div class="cart-sheet-inner">
+      <div class="cart-header">
+        <h2>장바구니</h2>
+        <button class="cart-close" onclick="closeCart()">&times;</button>
+      </div>
+
+      <div class="cart-content">
+        <div id="cartItems"></div>
+        <div class="cart-summary">
+          <div class="cart-summary-line">
+            <span>총 수량</span>
+            <span id="cartSummaryQty">0개</span>
+          </div>
+          <div class="cart-summary-total">
+            <span>총 금액</span>
+            <span id="cartSummaryTotal">0원</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cart-footer">
+        <div class="receiver-info" id="receiverInfo">받는 사람: </div>
+
+        <div class="form-group">
+          <label class="form-label">주문자 이름</label>
+          <input type="text" class="form-input" id="ordererName" placeholder="이름">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">메모 (선택)</label>
+          <textarea class="form-textarea" id="orderMemo" placeholder="배송 시 참고사항 등"></textarea>
+        </div>
+
+        <div class="action-btns">
+          <button class="btn-clear" onclick="showClearConfirm()">장바구니 비우기</button>
+          <button class="btn-copy" onclick="copyOrder()">주문 내용 복사</button>
+        </div>
+
+        <button class="btn-send" id="sendBtn" onclick="sendOrder()">문자로 주문 보내기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="confirm-dialog" id="confirmDialog">
+    <div class="confirm-box">
+      <div class="confirm-message" id="confirmMessage"></div>
+      <div class="confirm-buttons">
+        <button class="confirm-cancel" onclick="closeConfirm()">취소</button>
+        <button class="confirm-ok" id="confirmOk">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== CONFIG ==========
+    let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
+    let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
+    const APP_VERSION = 'v2.0';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_BUILD = '2026-10-07';
+    // ========== END CONFIG ==========
+
+    let allProducts = [];
+    let allCategories = [];
+    let DATA_CATS = [];
+    let filteredProducts = [];
+    let displayedCount = 0;
+    const ITEMS_PER_PAGE = 60;
+
+    let cart = {};
+    let ordererName = '';
+    let orderMemo = '';
+
+    let currentFilter = 'all';
+    let currentSort = 'category';
+    let currentCategory = null;
+    let searchQuery = '';
+    let searchTimeout;
+
+    // HTML escape
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, c => map[c]);
+    }
+
+    // localStorage helpers with try/catch
+    function getFromStorage(key, defaultValue) {
+      try {
+        const value = localStorage.getItem(key);
+        return value ? JSON.parse(value) : defaultValue;
+      } catch (e) {
+        return defaultValue;
+      }
+    }
+
+    function saveToStorage(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) {
+        // Storage quota exceeded or disabled, continue without persistence
+      }
+    }
+
+    // Init
+    async function init() {
+      // Load products
+      try {
+        const data = await decryptFile('data/p.bin');
+        ORDER_PHONE = (data.config && data.config.phone) || '';
+        ORDER_NAME = (data.config && data.config.name) || '';
+        document.getElementById('receiverInfo').textContent = '받는 사람: ' + ORDER_NAME;
+        // 담배는 제외
+        allProducts = (data.items || []).filter(i => i.c !== '담배');
+        DATA_CATS = data.cats || [];
+        allCategories = (data.cats || []).filter(c => allProducts.some(i => i.c === c));
+        document.getElementById('updated-date').textContent = data.updated || '-';
+      } catch (e) {
+        console.error('Failed to load products:', e);
+        return;
+      }
+
+      // Build search cache
+      buildSearchCache();
+
+      // Build category chips
+      buildCategoryChips();
+
+      // Load cart & form state
+      cart = getFromStorage('cart', {});
+      // 영외 목록에 없는 예전 장바구니 항목 정리
+      const validIds = new Set(allProducts.map(i => i.id));
+      Object.keys(cart).forEach(id => { if (!validIds.has(id)) delete cart[id]; });
+      ordererName = getFromStorage('ordererName', '');
+      orderMemo = getFromStorage('orderMemo', '');
+
+      document.getElementById('ordererName').value = ordererName;
+      document.getElementById('orderMemo').value = orderMemo;
+
+      // Setup event listeners
+      document.getElementById('searchInput').addEventListener('input', onSearch);
+      // 키보드의 '이동/검색/엔터'를 누르면 바로 검색하고 키보드를 내림
+      const hideKeyboard = () => {
+        const el = document.getElementById('searchInput');
+        clearTimeout(searchTimeout);
+        searchQuery = el.value.trim();
+        displayedCount = 0;
+        applyFiltersAndSort();
+        el.blur();
+      };
+      document.getElementById('searchForm').addEventListener('submit', e => { e.preventDefault(); hideKeyboard(); });
+      document.getElementById('searchInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); hideKeyboard(); }
+      });
+      // 목록을 스크롤하면 키보드 내림
+      window.addEventListener('touchmove', () => {
+        const el = document.getElementById('searchInput');
+        if (document.activeElement === el) el.blur();
+      }, { passive: true });
+      document.querySelectorAll('.chip').forEach(chip => {
+        chip.addEventListener('click', onFilterClick);
+      });
+      document.getElementById('sortSelect').addEventListener('change', onSortChange);
+      document.getElementById('ordererName').addEventListener('change', e => {
+        ordererName = e.target.value;
+        saveToStorage('ordererName', ordererName);
+      });
+      document.getElementById('orderMemo').addEventListener('change', e => {
+        orderMemo = e.target.value;
+        saveToStorage('orderMemo', orderMemo);
+      });
+
+      let verEl = document.getElementById('appVersion');
+      if (!verEl) { verEl = document.createElement('div'); verEl.className = 'app-version'; verEl.id = 'appVersion'; document.body.appendChild(verEl); }
+      verEl.textContent = APP_VERSION + ' · ' + APP_BUILD;
+
+      // Initial render
+      applyFiltersAndSort();
+    }
+
+    // 분류 선택 목록(드롭다운) 만들기
+    function buildCategoryChips() {
+      const sel = document.getElementById('sortSelect');
+      const opts = [`<option value="">전체 분류 (${allProducts.length})</option>`];
+      allCategories.forEach(cat => {
+        const n = allProducts.filter(p => p.c === cat).length;
+        opts.push(`<option value="${cat}">${cat} (${n})</option>`);
+      });
+      sel.innerHTML = opts.join('');
+    }
+
+    // Normalize string for search: NFC, lowercase, remove whitespace/punctuation
+    function normalize(str) {
+      return str.normalize('NFC').toLowerCase()
+        .replace(/[\s,.\-_!?\'"()[\]{}<>*&^%$#@]/g, '');
+    }
+
+    // Get initial consonants (초성) for Hangul syllables
+    function getChosung(text) {
+      const chosungMap = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+      let result = '';
+      for (let char of text) {
+        const code = char.charCodeAt(0);
+        if (code >= 0xAC00 && code <= 0xD7A3) {
+          const index = (code - 0xAC00) / 588 | 0;
+          result += chosungMap[index];
+        } else {
+          result += char.toLowerCase();
+        }
+      }
+      return result;
+    }
+
+    // Synonyms: groups of equivalent terms
+    const SYN = [
+      ['콜라', 'cola', 'coke', '코크', '코카콜라', 'cocacola'],
+      ['펩시', 'pepsi'],
+      ['사이다', 'cider', '스프라이트', 'sprite'],
+      ['환타', 'fanta'],
+      ['맥주', 'beer', '비어'],
+      ['소주', 'soju'],
+      ['와인', 'wine', '와잉'],
+      ['위스키', 'whisky', 'whiskey', '위스ky'],
+      ['막걸리', 'makgeolli', '탁주'],
+      ['하이볼', 'highball'],
+      ['무알콜', '논알콜', 'nonalcoholic', '알코올프리', '0.0'],
+      ['라면', 'ramen', 'ramyun', '라멘', '면'],
+      ['컵라면', '컵', '사발', '큰사발', '용기', '큰컵'],
+      ['신라면', 'shinramyun', 'shin'],
+      ['짜파게티', 'jjapaghetti', '짜장'],
+      ['과자', '스낵', 'snack'],
+      ['초코', '초콜릿', '초콜렛', '쵸코', 'chocolate', 'choco'],
+      ['아이스크림', 'icecream', '아이스', 'ice'],
+      ['커피', 'coffee', '카페', '아메리카노', 'americano'],
+      ['라떼', 'latte', '라테'],
+      ['디카페인', 'decaf', 'decaffeinated'],
+      ['에스프레소', 'espresso'],
+      ['콜드브루', 'coldbrew'],
+      ['우유', 'milk', '밀크'],
+      ['두유', 'soymilk', '베지밀'],
+      ['요거트', '요구르트', 'yogurt', 'yoghurt', '요플레'],
+      ['치즈', 'cheese'],
+      ['버터', 'butter'],
+      ['주스', '쥬스', 'juice'],
+      ['에이드', 'ade'],
+      ['탄산수', '스파클링', 'sparkling', '소다', 'soda'],
+      ['생수', '물', 'water', '샘물'],
+      ['녹차', 'greentea'],
+      ['홍차', 'blacktea', '블랙티'],
+      ['아이스티', 'icetea', 'icedtea'],
+      ['제로', 'zero', '무설탕', '슈가프리', 'sugarfree'],
+      ['젤리', 'jelly', '구미', 'gummy'],
+      ['사탕', '캔디', 'candy'],
+      ['쿠키', 'cookie'],
+      ['빵', 'bread', '식빵'],
+      ['케이크', '케익', 'cake'],
+      ['도넛', '도너츠', 'donut', 'doughnut'],
+      ['와플', 'waffle'],
+      ['닭가슴살', 'chickenbreast'],
+      ['치킨', 'chicken', '닭'],
+      ['만두', '교자', 'dumpling'],
+      ['피자', 'pizza'],
+      ['햄', 'ham', '스팸', 'spam'],
+      ['소시지', '소세지', 'sausage', '후랑크', '프랑크'],
+      ['참치', 'tuna'],
+      ['김치', 'kimchi'],
+      ['햇반', '즉석밥', '밥'],
+      ['스파게티', '파스타', 'pasta', 'spaghetti'],
+      ['케첩', '케찹', 'ketchup'],
+      ['마요네즈', '마요', 'mayo', 'mayonnaise'],
+      ['올리브유', '올리브오일', 'oliveoil'],
+      ['꿀', '허니', 'honey'],
+      ['홍삼', '인삼', 'redginseng', 'ginseng'],
+      ['비타민', 'vitamin', '비타'],
+      ['유산균', '프로바이오틱스', 'probiotics', '락토'],
+      ['오메가3', '오메가', 'omega'],
+      ['콜라겐', 'collagen'],
+      ['단백질', '프로틴', 'protein'],
+      ['샴푸', 'shampoo'],
+      ['린스', '컨디셔너', 'conditioner'],
+      ['트리트먼트', 'treatment', '헤어팩'],
+      ['바디워시', 'bodywash', '샤워젤', 'showergel'],
+      ['바디로션', 'bodylotion'],
+      ['비누', 'soap'],
+      ['치약', 'toothpaste'],
+      ['칫솔', 'toothbrush'],
+      ['가글', '구강청결제', 'mouthwash', '리스테린', 'listerine'],
+      ['선크림', '선스크린', '썬스크린', '썬크림', 'sunscreen', '선블록', '썬블럭', '선스틱', '썬스틱', 'sunstick'],
+      ['로션', 'lotion', '에멀젼', 'emulsion'],
+      ['크림', 'cream'],
+      ['토너', '스킨', 'toner'],
+      ['세럼', '에센스', '앰플', 'serum', 'essence', 'ampoule'],
+      ['클렌징', '클렌저', '세안', '폼클렌징', 'cleanser', 'cleansing'],
+      ['마스크팩', '시트마스크', '팩', 'maskpack'],
+      ['쿠션', 'cushion', '파운데이션', 'foundation'],
+      ['틴트', 'tint', '립스틱', 'lipstick'],
+      ['립밤', 'lipbalm', '립케어'],
+      ['핸드크림', 'handcream'],
+      ['향수', '퍼퓸', 'perfume', '오드퍼퓸'],
+      ['데오드란트', 'deodorant'],
+      ['면도기', '면도날', 'razor', '쉐이빙', 'shaving'],
+      ['생리대', '좋은느낌', '위스퍼', '패드'],
+      ['팬티라이너', '라이너', 'liner'],
+      ['기저귀', 'diaper', '하기스'],
+      ['세제', 'detergent', '세탁세제'],
+      ['섬유유연제', '유연제', '피죤', 'softener'],
+      ['주방세제', '설거지'],
+      ['락스', 'bleach', '표백'],
+      ['휴지', '화장지', '두루마리', 'tissue', '티슈'],
+      ['물티슈', 'wettissue', 'wetwipes'],
+      ['키친타월', '키친타올', 'kitchentowel'],
+      ['지퍼백', '위생백', 'ziplock'],
+      ['고무장갑', '장갑', 'glove'],
+      ['건전지', '배터리', 'battery', 'batteries'],
+      ['보조배터리', 'powerbank'],
+      ['충전기', 'charger', '어댑터', 'adapter'],
+      ['이어폰', 'earphone', '이어버드', '블루투스', 'bluetooth'],
+      ['양말', 'socks', 'sock'],
+      ['속옷', '드로즈', '팬티', '런닝', '언더웨어', 'underwear', '트렁크'],
+      ['티셔츠', 'tshirt', 't셔츠', '반팔'],
+      ['슬리퍼', 'slipper'],
+      ['우산', '양산', 'umbrella'],
+      ['선글라스', 'sunglasses'],
+      ['시계', 'watch'],
+      ['핫팩', 'hotpack', '보온대', '손난로'],
+      ['담배', 'cigarette', '에쎄', '레종', '보헴', '말보로', 'marlboro'],
+      ['하겐다즈', 'haagendazs', 'haagen'],
+      ['스타벅스', 'starbucks'],
+      ['맥심', 'maxim'],
+      ['카누', 'kanu'],
+      ['오레오', 'oreo'],
+      ['프링글스', 'pringles'],
+      ['하리보', 'haribo'],
+      ['레드불', 'redbull'],
+      ['몬스터', 'monster'],
+      ['게토레이', 'gatorade'],
+      ['포카리', 'pocari', '포카리스웨트'],
+      ['파워에이드', 'powerade'],
+      ['하이네켄', 'heineken'],
+      ['아사히', 'asahi'],
+      ['삿포로', 'sapporo'],
+      ['조니워커', 'johnniewalker'],
+      ['발렌타인', 'ballantine', 'ballantines'],
+      ['질레트', 'gillette'],
+      ['니베아', 'nivea'],
+      ['콜게이트', 'colgate'],
+      ['오랄비', 'oralb'],
+      ['닥터자르트', 'drjart'],
+      ['닥터지', 'drg'],
+      ['크리넥스', 'kleenex'],
+      ['쓰리엠', '3m'],
+      ['뉴트로지나', 'neutrogena'],
+      ['바세린', 'vaseline'],
+      ['웰치', 'welch', 'welchs'],
+      ['델몬트', 'delmonte'],
+      ['칸타타', 'cantata'],
+      ['허쉬', 'hershey', 'hersheys'],
+      ['밀카', 'milka'],
+      ['로투스', 'lotus'],
+      ['엠앤엠즈', '엠엔엠즈', 'mnm', 'm&m']
+    ];
+
+    // Precompute normalized fields for each product for speed
+    let productSearchCache = [];
+
+    function buildSearchCache() {
+      productSearchCache = allProducts.map(item => ({
+        id: item.id,
+        norm_n: normalize(item.n),
+        norm_v: normalize(item.v),
+        norm_s: normalize(item.s),
+        norm_q: normalize(item.q),
+        norm_c: normalize(item.c),
+        chosung_n: getChosung(item.n.replace(/\s+/g, '')),
+        original_c: item.c
+      }));
+    }
+
+    // Normalized synonym groups (built once)
+    let SYN_N = null;
+    let cacheById = null;
+    function synGroups() {
+      if (!SYN_N) SYN_N = SYN.map(g => [...new Set(g.map(t => normalize(t)).filter(t => t.length >= 1))]);
+      return SYN_N;
+    }
+    // A term may be replaced inside a token only if it is safe:
+    // exact match, or a Hangul term of 2+ chars, or a Latin term of 4+ chars.
+    function termHits(token, term) {
+      if (token === term) return true;
+      if (!token.includes(term)) return false;
+      return /[가-힣]/.test(term) ? term.length >= 2 : term.length >= 4;
+    }
+    const variantMemo = new Map();
+    function tokenVariants(tok) {
+      if (variantMemo.has(tok)) return variantMemo.get(tok);
+      const out = new Set([tok]);
+      for (const g of synGroups()) {
+        for (const term of g) {
+          if (!termHits(tok, term)) continue;
+          for (const alt of g) if (alt !== term && alt.length >= 2) out.add(tok.split(term).join(alt));
+        }
+      }
+      const arr = [...out];
+      variantMemo.set(tok, arr);
+      return arr;
+    }
+
+    function smartSearch(query, item) {
+      if (!cacheById) cacheById = new Map(productSearchCache.map(c => [c.id, c]));
+      const cache = cacheById.get(item.id);
+      if (!cache) return false;
+      const tokens = query.split(/\s+/).filter(t => t);
+      if (tokens.length === 0) return true;
+      const fields = [cache.norm_n, cache.norm_v, cache.norm_s, cache.norm_q, cache.norm_c];
+      return tokens.every(token => {
+        if (/^[ㄱ-ㅎ]+$/.test(token)) return cache.chosung_n.includes(token);
+        const nt = normalize(token);
+        if (!nt) return true;
+        return tokenVariants(nt).some(v => fields.some(f => f.includes(v)));
+      });
+    }
+
+    function onSearch(e) {
+      clearTimeout(searchTimeout);
+      searchQuery = e.target.value.trim();
+      searchTimeout = setTimeout(() => {
+        displayedCount = 0;
+        applyFiltersAndSort();
+      }, 150);
+    }
+
+    function onFilterClick(e) {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      e.target.classList.add('active');
+      currentFilter = e.target.dataset.filter;
+      displayedCount = 0;
+      applyFiltersAndSort();
+    }
+
+    function onSortChange(e) {
+      currentCategory = e.target.value || null;
+      displayedCount = 0;
+      applyFiltersAndSort();
+    }
+
+    function applyFiltersAndSort() {
+      // Filter
+      filteredProducts = allProducts.filter(item => {
+        let match = true;
+
+        // Text search using smart search
+        if (searchQuery) {
+          match = smartSearch(searchQuery, item);
+        }
+
+        // Filter chip
+        if (currentFilter === 'new' && !item.new) match = false;
+        if (currentFilter === 'out' && !item.out) match = false;
+        if (currentFilter === 'cart' && !cart[item.id]) match = false;
+
+        // Category filter
+        if (currentCategory && item.c !== currentCategory) match = false;
+
+        return match;
+      });
+
+      // Sort
+      if (currentSort === 'price-asc') {
+        filteredProducts.sort((a, b) => a.p - b.p);
+      } else if (currentSort === 'price-desc') {
+        filteredProducts.sort((a, b) => b.p - a.p);
+      } else if (currentSort === 'name') {
+        filteredProducts.sort((a, b) => (a.n || '').localeCompare(b.n || '', 'ko'));
+      } else if (currentSort === 'category') {
+        filteredProducts.sort((a, b) => {
+          const catA = allCategories.indexOf(a.c);
+          const catB = allCategories.indexOf(b.c);
+          if (catA !== catB) return catA - catB;
+          // Within same category: 영외 (out) items first, then rest in original order
+          if ((a.out ? 1 : 0) !== (b.out ? 1 : 0)) {
+            return (b.out ? 1 : 0) - (a.out ? 1 : 0);
+          }
+          return 0; // Keep original order for items in same category
+        });
+      }
+
+      // Render
+      renderProducts();
+      updateCartBar();
+    }
+
+
+    // ---- 상품 사진: 분류별 묶음 파일(thumbs/<분류번호>.json)을 필요할 때만 불러옴 ----
+    const thumbChunks = {};   // 분류번호 -> {id: dataURL} | 'loading' | 'fail'
+    function thumbKey(c) { return DATA_CATS.indexOf(c); }
+    function setThumb(el, src) {
+      el.dataset.done = '1';
+      if (!src) { el.classList.add('noimg'); return; }
+      const img = new Image();
+      img.className = 'thumb'; img.alt = ''; img.decoding = 'async';
+      img.onerror = () => { img.remove(); el.classList.add('noimg'); };
+      img.src = src;
+      el.appendChild(img);
+    }
+    function fillThumbs() {
+      document.querySelectorAll('.thumb-wrap:not([data-done])').forEach(el => {
+        const k = thumbKey(el.dataset.c);
+        const ch = thumbChunks[k];
+        if (ch === 'loading') return;
+        if (ch === 'fail') return setThumb(el, 'https://www.welfare.mil.kr/shop/imgView.do?p_code=' + el.dataset.id + '&type=1');
+        if (ch) return setThumb(el, ch[el.dataset.id]);
+        thumbChunks[k] = 'loading';
+        decryptFile('data/t' + k + '.bin')
+          .then(m => { thumbChunks[k] = m; })
+          .catch(() => { thumbChunks[k] = 'fail'; })
+          .finally(fillThumbs);
+      });
+    }
+
+    function renderProducts() {
+      const list = document.getElementById('productList');
+      list.innerHTML = '';
+
+      const limit = Math.min(displayedCount + ITEMS_PER_PAGE, filteredProducts.length);
+      const batch = filteredProducts.slice(0, limit);
+
+      let lastCategory = null;
+      const categoryCounts = {};
+      filteredProducts.forEach(item => {
+        categoryCounts[item.c] = (categoryCounts[item.c] || 0) + 1;
+      });
+
+      batch.forEach(item => {
+        // Add category header if sorting by category and category changed
+        if (currentSort === 'category' && item.c !== lastCategory) {
+          lastCategory = item.c;
+          const header = document.createElement('div');
+          header.className = 'category-header';
+          header.textContent = `${item.c} · ${categoryCounts[item.c]}개`;
+          list.appendChild(header);
+        }
+
+        const qty = cart[item.id] || 0;
+        const card = document.createElement('div');
+        card.className = 'card' + (qty > 0 ? ' in-cart' : '');
+        card.id = 'card-' + item.id;
+
+        const badges = [];
+        if (item.new) badges.push('<span class="badge badge-new">신규</span>');
+        if (item.out) badges.push('<span class="badge badge-out">영외</span>');
+
+        const searchQ = encodeURIComponent(item.q + (item.s && /\d/.test(item.s) ? ' ' + item.s : ''));
+
+        // Build search links
+        let searchLinks = '<a href="https://search.shopping.naver.com/search/all?query=' + searchQ + '" target="_blank" rel="noopener" class="search-link">네이버</a>';
+        searchLinks += '<a href="https://browse.gmarket.co.kr/search?keyword=' + searchQ + '" target="_blank" rel="noopener" class="search-link">G마켓</a>';
+
+        if (item.c === '화장품·뷰티' || item.c === '헤어·바디') {
+          searchLinks = '<a href="https://www.oliveyoung.co.kr/store/search/getSearchMain.do?query=' + searchQ + '" target="_blank" rel="noopener" class="search-link">올리브영</a>' + searchLinks;
+        }
+
+        // Build meta line with optional category
+        let metaLine = escapeHtml(item.v) + ' · ' + escapeHtml(item.s);
+        if (currentSort !== 'category') {
+          metaLine = metaLine + ' · ' + escapeHtml(item.c);
+        }
+
+        const shownName = (item.n || '').replace(/^\((영외|동계)\)\s*/, '');
+        card.innerHTML = `
+          <div class="c-row">
+            <div class="thumb-wrap" data-id="${item.id}" data-c="${escapeHtml(item.c)}" style="cursor:pointer;" onclick="openZoom('${item.id}')"></div>
+            <div class="c-body">
+              <div class="card-name" style="cursor:pointer;" onclick="openZoom('${item.id}')">${escapeHtml(shownName)}</div>
+              <div class="card-meta">${badges.join('')}<span>${metaLine}</span></div>
+              <div class="c-bottom">
+                <div class="card-price">${item.p.toLocaleString('ko-KR')}원</div>
+                <div class="card-qty">
+                  <button class="qty-btn" onclick="updateQty('${item.id}', -1)" aria-label="빼기">−</button>
+                  <div class="qty-display">${qty}</div>
+                  <button class="qty-btn" onclick="updateQty('${item.id}', 1)" aria-label="담기">+</button>
+                </div>
+              </div>
+              <div class="search-links">${searchLinks}</div>
+            </div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+      fillThumbs();
+
+      // Result count
+      const count = filteredProducts.length;
+      document.getElementById('resultCount').textContent = count > 0 ? `${count}개 상품` : '검색 결과 없음';
+
+      // Load more button
+      const moreBtn = document.getElementById('loadMoreBtn');
+      if (limit < filteredProducts.length) {
+        moreBtn.style.display = 'block';
+        moreBtn.textContent = `더 보기 (${limit}/${count})`;
+        moreBtn.onclick = () => {
+          displayedCount = limit;
+          renderProducts();
+        };
+      } else {
+        moreBtn.style.display = 'none';
+      }
+
+      displayedCount = limit;
+    }
+
+    function updateQty(id, delta) {
+      const curr = cart[id] || 0;
+      const newQty = Math.max(0, curr + delta);
+      const wasAdded = curr === 0 && newQty > 0;
+      if (newQty === 0) {
+        delete cart[id];
+      } else {
+        cart[id] = newQty;
+      }
+      saveToStorage('cart', cart);
+      const card = document.getElementById('card-' + id);
+      if (card) {
+        card.querySelector('.qty-display').textContent = newQty;
+        if (newQty > 0) {
+          card.classList.add('in-cart');
+        } else {
+          card.classList.remove('in-cart');
+        }
+      }
+      updateCartBar();
+      if (wasAdded) {
+        const btn = document.getElementById('floatingCartBtn');
+        btn.classList.remove('bounce');
+        void btn.offsetWidth;
+        btn.classList.add('bounce');
+      }
+      if (currentFilter === 'cart') {
+        applyFiltersAndSort();
+      }
+      // 장바구니 화면이 열려 있으면 즉시 다시 그림
+      if (document.getElementById('cartSheet').classList.contains('open')) {
+        renderCartSheet();
+      }
+    }
+
+    function updateCartBar() {
+      const types = Object.keys(cart).length;
+      const qty = Object.values(cart).reduce((a, b) => a + b, 0);
+      const total = Object.entries(cart).reduce((sum, [id, q]) => {
+        const item = allProducts.find(p => p.id === id);
+        return sum + (item ? item.p * q : 0);
+      }, 0);
+      const badge = document.getElementById('cartBadge');
+      const pill = document.getElementById('cartPill');
+      if (qty > 0) {
+        badge.textContent = qty;
+        badge.classList.add('show');
+        pill.textContent = total.toLocaleString('ko-KR') + '원';
+        pill.classList.add('show');
+      } else {
+        badge.classList.remove('show');
+        pill.classList.remove('show');
+      }
+    }
+
+    function getThumbSrc(item) {
+      const k = thumbKey(item.c);
+      const ch = thumbChunks[k];
+      if (ch && ch !== 'loading' && ch !== 'fail') {
+        return ch[item.id];
+      }
+      return null;
+    }
+
+    function openCart() {
+      renderCartSheet();
+      document.getElementById('cartSheet').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCart() {
+      document.getElementById('cartSheet').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function openZoom(id) {
+      const item = allProducts.find(p => p.id === id);
+      if (!item) return;
+      const modal = document.getElementById('zoomModal');
+
+      // Set item details
+      document.getElementById('zoomName').textContent = item.n;
+
+      const badges = [];
+      if (item.new) badges.push('<span class="badge badge-new">신규</span>');
+      if (item.out) badges.push('<span class="badge badge-out">영외</span>');
+      document.getElementById('zoomBadges').innerHTML = badges.join('');
+
+      const metaLine = escapeHtml(item.v) + ' · ' + escapeHtml(item.s) + ' · ' + escapeHtml(item.c);
+      document.getElementById('zoomMeta').textContent = metaLine;
+
+      document.getElementById('zoomPrice').textContent = item.p.toLocaleString('ko-KR') + '원';
+
+      const qty = cart[item.id] || 0;
+      const zoomQtyHtml = `
+        <button class="qty-btn" onclick="updateQtyZoom('${item.id}', -1)" style="width:36px;height:36px;" aria-label="빼기">−</button>
+        <div class="qty-display" id="zoomQtyDisplay">${qty}</div>
+        <button class="qty-btn" onclick="updateQtyZoom('${item.id}', 1)" style="width:36px;height:36px;" aria-label="담기">+</button>
+      `;
+      document.getElementById('zoomQty').innerHTML = zoomQtyHtml;
+
+      // Build search links
+      const searchQ = encodeURIComponent(item.q + (item.s && /\d/.test(item.s) ? ' ' + item.s : ''));
+      let searchLinks = '<a href="https://search.shopping.naver.com/search/all?query=' + searchQ + '" target="_blank" rel="noopener" class="search-link">네이버</a>';
+      searchLinks += '<a href="https://browse.gmarket.co.kr/search?keyword=' + searchQ + '" target="_blank" rel="noopener" class="search-link">G마켓</a>';
+      if (item.c === '화장품·뷰티' || item.c === '헤어·바디') {
+        searchLinks = '<a href="https://www.oliveyoung.co.kr/store/search/getSearchMain.do?query=' + searchQ + '" target="_blank" rel="noopener" class="search-link">올리브영</a>' + searchLinks;
+      }
+      document.getElementById('zoomLinks').innerHTML = searchLinks;
+
+      // Set image
+      const imageArea = document.getElementById('zoomImageArea');
+      imageArea.innerHTML = '';
+      const thumbSrc = getThumbSrc(item);
+      if (thumbSrc) {
+        const img = document.createElement('img');
+        img.src = thumbSrc;
+        imageArea.appendChild(img);
+      } else {
+        const thumbWrap = document.createElement('div');
+        thumbWrap.className = 'thumb-wrap';
+        thumbWrap.dataset.id = item.id;
+        thumbWrap.dataset.c = item.c;
+        imageArea.appendChild(thumbWrap);
+      }
+
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      // Try to load full-size image
+      const fullImg = new Image();
+      fullImg.referrerPolicy = 'no-referrer';
+      fullImg.onload = () => {
+        imageArea.innerHTML = '';
+        imageArea.appendChild(fullImg);
+      };
+      fullImg.src = 'https://www.welfare.mil.kr/shop/imgView.do?p_code=' + item.id + '&type=1';
+
+      // Fill missing thumbnails in modal
+      if (!thumbSrc) {
+        setTimeout(fillThumbs, 0);
+      }
+    }
+
+    function closeZoom() {
+      document.getElementById('zoomModal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function updateQtyZoom(id, delta) {
+      updateQty(id, delta);
+      const qty = cart[id] || 0;
+      document.getElementById('zoomQtyDisplay').textContent = qty;
+    }
+
+    function renderCartSheet() {
+      const container = document.getElementById('cartItems');
+      container.innerHTML = '';
+
+      if (Object.keys(cart).length === 0) {
+        container.innerHTML = '<div style="text-align:center;color:var(--color-text-secondary);padding:20px;">장바구니가 비어있습니다</div>';
+      } else {
+        let items = Object.entries(cart)
+          .map(([id, qty]) => {
+            const item = allProducts.find(p => p.id === id);
+            if (!item) return null;
+            const lineTotal = item.p * qty;
+            return { item, qty, lineTotal };
+          })
+          .filter(Boolean);
+
+        // Sort by category order, then by name
+        items.sort((a, b) => {
+          const catA = allCategories.indexOf(a.item.c);
+          const catB = allCategories.indexOf(b.item.c);
+          if (catA !== catB) return catA - catB;
+          return (a.item.n || '').localeCompare(b.item.n || '', 'ko');
+        });
+
+        items.forEach(({ item, qty, lineTotal }) => {
+          const div = document.createElement('div');
+          div.className = 'cart-item';
+
+          const thumbSrc = getThumbSrc(item);
+          let thumbHtml = `<div class="cart-item-thumb"><div class="thumb-wrap" data-id="${item.id}" data-c="${escapeHtml(item.c)}"></div></div>`;
+          if (thumbSrc) {
+            thumbHtml = `<div class="cart-item-thumb"><img class="thumb" src="${thumbSrc}" alt="" style="width:100%;height:100%;object-fit:contain;"></div>`;
+          }
+
+          div.innerHTML = thumbHtml + `
+            <div class="cart-item-content">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div style="flex:1;">
+                  <div class="cart-item-name">${escapeHtml(item.n)}</div>
+                  <div class="cart-item-spec">${escapeHtml(item.s)}</div>
+                  <div class="cart-item-price">${item.p.toLocaleString('ko-KR')}원</div>
+                </div>
+                <button class="remove-btn" onclick="removeFromCart('${item.id}')">×</button>
+              </div>
+              <div class="cart-item-qty">
+                <button class="qty-btn" style="width:28px;height:28px;font-size:14px;" onclick="updateQty('${item.id}', -1)">−</button>
+                <div style="min-width:30px;text-align:center;font-weight:600;">${qty}</div>
+                <button class="qty-btn" style="width:28px;height:28px;font-size:14px;" onclick="updateQty('${item.id}', 1)">+</button>
+              </div>
+              <div class="cart-item-total">${lineTotal.toLocaleString('ko-KR')}원</div>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+
+        // Fill missing thumbnails in cart
+        fillThumbs();
+      }
+
+      // Summary
+      const totalQty = Object.values(cart).reduce((a, b) => a + b, 0);
+      const totalPrice = Object.entries(cart).reduce((sum, [id, q]) => {
+        const item = allProducts.find(p => p.id === id);
+        return sum + (item ? item.p * q : 0);
+      }, 0);
+      document.getElementById('cartSummaryQty').textContent = `${totalQty}개`;
+      document.getElementById('cartSummaryTotal').textContent = `${totalPrice.toLocaleString('ko-KR')}원`;
+
+      // Send button
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.disabled = Object.keys(cart).length === 0;
+    }
+
+    function removeFromCart(id) {
+      delete cart[id];
+      saveToStorage('cart', cart);
+      renderCartSheet();
+      updateCartBar();
+      const card = document.getElementById('card-' + id);
+      if (card) {
+        card.classList.remove('in-cart');
+        card.querySelector('.qty-display').textContent = '0';
+      }
+    }
+
+    function showClearConfirm() {
+      document.getElementById('confirmMessage').textContent = '장바구니를 비우시겠습니까?';
+      document.getElementById('confirmOk').onclick = () => {
+        cart = {};
+        saveToStorage('cart', cart);
+        closeConfirm();
+        renderCartSheet();
+        updateCartBar();
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('in-cart'));
+        document.querySelectorAll('.qty-display').forEach(d => d.textContent = '0');
+      };
+      document.getElementById('confirmDialog').classList.add('open');
+    }
+
+    function closeConfirm() {
+      document.getElementById('confirmDialog').classList.remove('open');
+    }
+
+    function buildOrderText() {
+      let items = Object.entries(cart)
+        .map(([id, qty]) => {
+          const item = allProducts.find(p => p.id === id);
+          if (!item) return null;
+          const lineTotal = item.p * qty;
+          return { item, qty, text: `${item.n} ${item.s} x${qty} = ${lineTotal.toLocaleString('ko-KR')}원` };
+        })
+        .filter(Boolean);
+
+      // Sort by category order, then by name
+      items.sort((a, b) => {
+        const catA = allCategories.indexOf(a.item.c);
+        const catB = allCategories.indexOf(b.item.c);
+        if (catA !== catB) return catA - catB;
+        return (a.item.n || '').localeCompare(b.item.n || '', 'ko');
+      });
+
+      const itemTexts = items.map(i => i.text);
+
+      const totalQty = Object.values(cart).reduce((a, b) => a + b, 0);
+      const totalPrice = Object.entries(cart).reduce((sum, [id, q]) => {
+        const item = allProducts.find(p => p.id === id);
+        return sum + (item ? item.p * q : 0);
+      }, 0);
+      const types = Object.keys(cart).length;
+
+      const now = new Date();
+      const dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+      let text = `[황금마차 주문] ${ordererName}\n${dateStr}\n----\n`;
+      itemTexts.forEach((item, i) => {
+        text += `${i + 1}. ${item}\n`;
+      });
+      text += `----\n총 ${types}종 ${totalQty}개 / 합계 ${totalPrice.toLocaleString('ko-KR')}원`;
+      if (orderMemo.trim()) {
+        text += `\n메모: ${orderMemo}`;
+      }
+
+      return text;
+    }
+
+    function copyOrder() {
+      const text = buildOrderText();
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => showToast('복사됨')).catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast('복사됨');
+      } catch (e) {
+        console.error('Copy failed:', e);
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => document.body.removeChild(toast), 2000);
+    }
+
+    function sendOrder() {
+      if (Object.keys(cart).length === 0) return;
+
+      const text = buildOrderText();
+      const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      const separator = isIOS ? '&' : '?';
+      const smsUrl = 'sms:' + ORDER_PHONE + separator + 'body=' + encodeURIComponent(text);
+
+      location.href = smsUrl;
+    }
+
+    // Keyboard and overlay event handlers
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (document.getElementById('zoomModal').classList.contains('open')) {
+          closeZoom();
+        } else if (document.getElementById('cartSheet').classList.contains('open')) {
+          closeCart();
+        }
+      }
+    });
+
+    document.getElementById('zoomModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        closeZoom();
+      }
+    });
+
+    document.getElementById('cartSheet').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        closeCart();
+      }
+    });
+
+    // Start
+    // ===== 비밀번호 잠금 (AES-GCM, PBKDF2-SHA256) =====
+    let CRYPTO_KEY = null;
+    const KEY_STORE = 'hm_key_v1';
+    const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+    const b64e = a => btoa(String.fromCharCode(...new Uint8Array(a)));
+    let ENC_META = null;
+    async function loadMeta() {
+      if (!ENC_META) ENC_META = await (await fetch('data/meta.json', { cache: 'no-store' })).json();
+      return ENC_META;
+    }
+    async function deriveKey(pw) {
+      const m = await loadMeta();
+      const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw.normalize('NFC')), 'PBKDF2', false, ['deriveKey']);
+      return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b64d(m.salt), iterations: m.iter, hash: 'SHA-256' },
+        base, { name: 'AES-GCM', length: 256 }, true, ['decrypt']);
+    }
+    async function decryptFile(path) {
+      const r = await fetch(path + '?v=' + (ENC_META ? ENC_META.ver : ''));
+      if (!r.ok) throw new Error('fetch ' + r.status);
+      const buf = new Uint8Array(await r.arrayBuffer());
+      const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, CRYPTO_KEY, buf.slice(12));
+      return JSON.parse(new TextDecoder().decode(pt));
+    }
+    async function tryKey(key) {
+      CRYPTO_KEY = key;
+      await loadMeta();
+      // 확인용 작은 파일로 비밀번호 검증
+      const chk = await decryptFile('data/check.bin');
+      if (!chk || chk.ok !== 1) throw new Error('bad');
+    }
+    function showLock(msg) {
+      const lk = document.getElementById('lockScreen');
+      lk.hidden = false;
+      document.getElementById('lockMsg').textContent = msg || '';
+      setTimeout(() => document.getElementById('lockPw').focus(), 50);
+    }
+    async function unlock(e) {
+      if (e) e.preventDefault();
+      const pwEl = document.getElementById('lockPw');
+      const btn = document.getElementById('lockBtn');
+      const pw = pwEl.value;
+      if (!pw) return;
+      btn.disabled = true; btn.textContent = '확인 중…';
+      try {
+        const key = await deriveKey(pw);
+        await tryKey(key);
+        if (document.getElementById('lockRemember').checked) {
+          try { localStorage.setItem(KEY_STORE, b64e(await crypto.subtle.exportKey('raw', key))); } catch (_) {}
+        }
+        pwEl.value = ''; pwEl.blur();
+        document.getElementById('lockScreen').hidden = true;
+        await init();
+      } catch (err) {
+        CRYPTO_KEY = null;
+        document.getElementById('lockMsg').textContent = '비밀번호가 맞지 않아요';
+        pwEl.select();
+      } finally {
+        btn.disabled = false; btn.textContent = '들어가기';
+      }
+    }
+    function lockNow() {
+      try { localStorage.removeItem(KEY_STORE); } catch (_) {}
+      location.reload();
+    }
+    (async () => {
+      document.getElementById('lockForm').addEventListener('submit', unlock);
+      let saved = null;
+      try { saved = localStorage.getItem(KEY_STORE); } catch (_) {}
+      if (saved) {
+        try {
+          const key = await crypto.subtle.importKey('raw', b64d(saved), { name: 'AES-GCM' }, true, ['decrypt']);
+          await tryKey(key);
+          document.getElementById('lockScreen').hidden = true;
+          await init();
+          return;
+        } catch (_) {
+          try { localStorage.removeItem(KEY_STORE); } catch (__) {}
+        }
+      }
+      showLock('');
+    })().catch(e => console.error('init() error:', e));
+  </script>
+</body>
+</html>
