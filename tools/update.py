@@ -70,8 +70,9 @@ def parse_list(page_html):
 
 
 def last_page(page_html):
-    m = re.findall(r'pg=(\d+)[^"]*"[^>]*>\s*끝', page_html)
-    return int(m[-1]) if m else 1
+    # 페이지 이동 링크(pg=숫자) 중 가장 큰 번호 = 마지막 페이지 ('끝' 링크 형식이 달라도 동작)
+    nums = [int(x) for x in re.findall(r'[?&;]pg=(\d+)', page_html)]
+    return max(nums) if nums else 1
 
 
 def login(s, uid, pw):
@@ -89,8 +90,15 @@ def fetch_all(s, new_only=False):
     if '로그아웃' not in first and not parse_list(first):
         raise RuntimeError('로그인 실패 또는 목록 접근 불가 (아이디/비밀번호 또는 사이트 변경 확인)')
     items, last = parse_list(first), last_page(first)
-    for pg in range(2, last + 1):
-        items += parse_list(s.get(url % pg, timeout=30).text)
+    pg = 2
+    while pg <= max(last, 2) and pg <= 200:
+        page = s.get(url % pg, timeout=30).text
+        got = parse_list(page)
+        if not got:
+            break
+        items += got
+        last = max(last, last_page(page))   # 다음 묶음(11~20쪽 …) 링크로 마지막 쪽을 다시 확인
+        pg += 1
         time.sleep(0.4)
     log('수집', '신규' if new_only else '전체', len(items), '개 /', last, '페이지')
     return items
