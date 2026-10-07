@@ -845,6 +845,7 @@
       overflow-y: auto;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
       padding: var(--spacing);
     }
 
@@ -1310,7 +1311,23 @@
     .sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 8px 8px 16px; border-bottom: 1px solid var(--color-border); flex: none; }
     .sheet-head h2 { margin: 0; font-size: 18px; font-weight: 700; font-family: var(--font-serif); letter-spacing: -0.3px; }
     .sheet-close { width: 44px; height: 44px; background: none; border: none; font-size: 22px; line-height: 1; color: var(--color-fg); cursor: pointer; }
-    .sheet-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 4px 16px 12px; }
+    .sheet-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 4px 16px 12px; }
+    #historyBody { min-height: 40vh; }
+    /* 고무줄(탄성) 스크롤: 시트 안쪽 내용 묶음만 움직여요 */
+    .elastic-in { min-height: 100%; }
+    #cartInner { display: flex; flex-direction: column; }
+    #cartInner > * { flex: none; }
+    #cartInner > #cartItems { flex: 1 1 auto; display: flex; flex-direction: column; }
+    #historyBody .elastic-in { display: flex; flex-direction: column; }
+    #historyBody .elastic-in > .hist-empty { flex: 1; display: flex; align-items: center; justify-content: center; }
+    .cart-content.is-empty .cart-summary,
+    .cart-content.is-empty .order-info,
+    .cart-content.is-empty .action-btns { display: none; }
+    .cart-empty { flex: 1; min-height: 52vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; color: var(--color-text-secondary); padding: 24px 12px; }
+    .cart-empty .ce-ico { font-size: 56px; line-height: 1; margin-bottom: 4px; }
+    .cart-empty .ce-title { font-size: 17px; font-weight: 700; color: var(--color-fg); font-family: var(--font-serif); }
+    .cart-empty .ce-sub { font-size: 13px; }
+    .cart-empty .ce-btn { margin-top: 14px; min-height: 46px; padding: 0 22px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; color: #fff; cursor: pointer; background: linear-gradient(135deg, var(--color-maple) 0%, var(--color-burnt-orange) 100%); box-shadow: 0 2px 8px rgba(181,69,42,.2); }
     .sheet-foot { flex: none; display: flex; gap: 8px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--color-border); background: var(--color-bg); }
     .sheet-foot button { min-height: 46px; padding: 0 14px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--color-border); background: var(--color-card); color: var(--color-fg); }
     .sheet-foot .btn-primary { flex: 1; border: none; color: #fff; background: linear-gradient(135deg, var(--color-maple) 0%, var(--color-burnt-orange) 100%); box-shadow: 0 2px 8px rgba(181,69,42,.2); }
@@ -1500,6 +1517,7 @@
       </div>
 
       <div class="cart-content" id="cartScroll">
+       <div class="elastic-in" id="cartInner">
         <div id="cartSelectAllRow"></div>
         <div id="cartItems"></div>
         <div class="cart-summary">
@@ -1532,6 +1550,7 @@
           <button class="btn-clear" onclick="showClearConfirm()">장바구니 비우기</button>
           <button class="btn-copy" onclick="copyOrder()">주문 내용 복사</button>
         </div>
+       </div>
       </div>
 
       <div class="cart-footer">
@@ -1546,7 +1565,7 @@
         <h2>분류 선택</h2>
         <button type="button" class="sheet-close" onclick="closeCatSheet()" aria-label="닫기">✕</button>
       </div>
-      <div class="sheet-body" id="catList"></div>
+      <div class="sheet-body" id="catList"><div class="elastic-in" id="catInner"></div></div>
       <div class="sheet-foot">
         <button type="button" onclick="clearDraftCats()">전체 해제</button>
         <button type="button" class="btn-primary" id="catApplyBtn" onclick="applyCats()">적용</button>
@@ -1560,7 +1579,7 @@
         <h2>주문 내역</h2>
         <button type="button" class="sheet-close" onclick="closeHistory()" aria-label="닫기">✕</button>
       </div>
-      <div class="sheet-body" id="historyBody"></div>
+      <div class="sheet-body" id="historyBody"><div class="elastic-in" id="historyInner"></div></div>
     </div>
   </div>
 
@@ -1578,7 +1597,7 @@
     // ========== CONFIG ==========
     let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
     let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
-    const APP_VERSION = 'v2.5';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_VERSION = 'v2.6';      // 화면 아래 모퉁이에 표시되는 버전
     const APP_BUILD = '2026-10-07';
 
     // ---- 소주·맥주 박스 주문 규칙 (직접 고쳐 쓰는 표) ----
@@ -2271,6 +2290,111 @@
       }
     }
 
+    // ---------- 고무줄(탄성) 오버스크롤 ----------
+    // 시트 스크롤 영역이 끝(위/아래)에 닿았거나 스크롤할 내용이 없을 때,
+    // 손가락을 따라 안쪽 내용이 장력 있게 움직였다가 튕기듯 돌아와요.
+    // 평소 스크롤(영역 중간)은 브라우저 기본 동작 그대로 둬요.
+    const elasticBound = new WeakSet();
+    function attachElastic(scrollEl, contentEl) {
+      if (!scrollEl || elasticBound.has(scrollEl)) return;   // 다시 그려도 한 번만 연결
+      const content = contentEl || scrollEl.firstElementChild;
+      if (!content) return;
+      elasticBound.add(scrollEl);
+      const rmq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+      let maxPull = 120, reduce = false;
+      let startX = 0, startY = 0, lastY = 0, raw = 0, mode = 'idle', timer = 0, curOffset = 0;
+
+      const isFormEl = el => !!(el && el.closest && el.closest('input, textarea, select, [contenteditable="true"]'));
+      const inHScroll = el => {
+        for (let n = el; n && n !== scrollEl && n.nodeType === 1; n = n.parentElement) {
+          if (n.scrollWidth > n.clientWidth + 1) {
+            const ox = getComputedStyle(n).overflowX;
+            if (ox === 'auto' || ox === 'scroll') return true;
+          }
+        }
+        return false;
+      };
+      const setOffset = (y) => { curOffset = y; content.style.transform = y ? 'translate3d(0,' + y.toFixed(2) + 'px,0)' : ''; };
+      const damp = r => {
+        const a = Math.abs(r) / maxPull * 0.55 + 1;
+        return (r < 0 ? -1 : 1) * maxPull * (1 - 1 / a);
+      };
+      const finish = () => {
+        clearTimeout(timer);
+        content.style.transition = '';
+        content.style.transform = '';
+        content.style.willChange = '';
+        curOffset = 0;
+      };
+      const springBack = () => {
+        if (curOffset === 0 && !content.style.transform) { finish(); return; }
+        content.style.transition = reduce ? 'transform .15s ease-out' : 'transform .35s cubic-bezier(.2,.9,.3,1.2)';
+        content.style.transform = 'translate3d(0,0,0)';
+        curOffset = 0;
+        clearTimeout(timer);
+        timer = setTimeout(finish, reduce ? 200 : 420);
+      };
+
+      scrollEl.addEventListener('touchstart', (e) => {
+        mode = 'idle';
+        if (e.touches.length !== 1) { mode = 'ignore'; return; }
+        if (isFormEl(e.target) || inHScroll(e.target)) { mode = 'ignore'; return; }
+        reduce = !!(rmq && rmq.matches);
+        maxPull = reduce ? 40 : 120;
+        // 되돌아오는 중에 다시 잡으면 그 자리에서 이어서
+        clearTimeout(timer);
+        content.style.transition = 'none';
+        content.style.transform = '';
+        curOffset = 0;
+        startX = e.touches[0].clientX;
+        startY = lastY = e.touches[0].clientY;
+        raw = 0;
+      }, { passive: true });
+
+      scrollEl.addEventListener('touchmove', (e) => {
+        if (mode === 'ignore' || mode === 'idle' && !e.touches.length) return;
+        const t = e.touches[0];
+        if (!t) return;
+        if (mode === 'idle') {
+          const dx = t.clientX - startX, dy = t.clientY - startY;
+          if (Math.abs(dy) < 6 && Math.abs(dx) < 6) return;        // 탭은 건드리지 않아요
+          if (Math.abs(dy) < 6 || Math.abs(dx) > Math.abs(dy)) { mode = 'ignore'; return; }
+          mode = 'vert';
+          lastY = t.clientY;
+          return;
+        }
+        const step = t.clientY - lastY;
+        lastY = t.clientY;
+        const atTop = scrollEl.scrollTop <= 0;
+        const atBottom = scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 1;
+        if (raw === 0) {
+          if ((step > 0 && atTop) || (step < 0 && atBottom)) raw = step;   // 끝에 닿은 채로 더 밀 때만 시작
+          else return;                                                      // 평소 스크롤 (기본 동작)
+        } else {
+          raw += step;
+          if (raw * (raw - step) <= 0) {                                    // 반대로 돌아와 원점 통과
+            raw = 0;
+            setOffset(0);
+            return;
+          }
+        }
+        if (e.cancelable) e.preventDefault();
+        content.style.willChange = 'transform';
+        setOffset(damp(raw));
+      }, { passive: false });
+
+      const end = () => {
+        mode = 'idle';
+        raw = 0;
+        springBack();
+      };
+      scrollEl.addEventListener('touchend', end, { passive: true });
+      scrollEl.addEventListener('touchcancel', end, { passive: true });
+    }
+    attachElastic(document.getElementById('cartScroll'), document.getElementById('cartInner'));
+    attachElastic(document.getElementById('historyBody'), document.getElementById('historyInner'));
+    attachElastic(document.getElementById('catList'), document.getElementById('catInner'));
+
     // ---------- 박스 주문 (소주·맥주) ----------
     const BOX_SOJU_RE = /참이슬|처음처럼|진로|좋은데이|새로|청풍|잎새주|선양|참소주|시원|대선|한라산|소주/;
     const BOX_BEER_RE = /카스|테라|하이트|켈리|클라우드|아사히|하이네켄|삿포로|에비스|코젤|칭따오|버드와이저|호가든|기네스|맥주|라거|필스너|크롬바커/;
@@ -2616,9 +2740,10 @@
       container.innerHTML = '';
       selRow.innerHTML = '';
       const lines = cartLines();
+      if (scrollEl) scrollEl.classList.toggle('is-empty', lines.length === 0);
 
       if (lines.length === 0) {
-        container.innerHTML = '<div style="text-align:center;color:var(--color-text-secondary);padding:20px;">장바구니가 비어있습니다</div>';
+        container.innerHTML = '<div class="cart-empty"><div class="ce-ico" aria-hidden="true">🧺</div><div class="ce-title">장바구니가 비어 있어요</div><div class="ce-sub">마음에 드는 상품을 담아 보세요</div><button type="button" class="ce-btn" onclick="closeCart()">상품 보러 가기</button></div>';
       } else {
         const nChecked = lines.filter(l => l.checked).length;
         selRow.innerHTML = `<label class="cart-selall"><input type="checkbox" id="cartSelAll" onchange="toggleAllCart(this.checked)"><span>전체 선택</span><span class="sa-count">${nChecked}개 선택</span></label>`;
@@ -2940,9 +3065,10 @@
 
     function renderHistory() {
       const body = document.getElementById('historyBody');
+      const inner = document.getElementById('historyInner');
       const prevTop = body.scrollTop;
       // 펼쳐 둔 주문 목록은 다시 그려도 유지
-      const openIds = new Set([...body.querySelectorAll('details.hist-items[open]')].map(el => el.dataset.oid));
+      const openIds = new Set([...inner.querySelectorAll('details.hist-items[open]')].map(el => el.dataset.oid));
       let orders = getFromStorage('hm_orders', []);
       if (!Array.isArray(orders)) orders = [];
       if (histSel && !orders.some(o => Number(o.id) === histSel.id)) histSel = null;
@@ -2950,7 +3076,7 @@
       let html = '<div class="hist-note">이 휴대폰에만 저장돼요</div>';
       if (orders.length === 0) {
         html += '<div class="hist-empty">아직 주문 내역이 없어요</div>';
-        body.innerHTML = html;
+        inner.innerHTML = html;
         body.scrollTop = prevTop;
         return;
       }
@@ -3005,7 +3131,7 @@
           <div class="hist-btns">${btns}</div>
         </div>`;
       });
-      body.innerHTML = html;
+      inner.innerHTML = html;
       body.scrollTop = prevTop;
       updateHistSelUI();
       fillThumbs();
@@ -3118,7 +3244,7 @@
     function openCatSheet() {
       draftCats = new Set(selectedCats);
       catBase = allProducts.filter(passesBase);
-      document.getElementById('catList').innerHTML = allCategories.map((c, i) =>
+      document.getElementById('catInner').innerHTML = allCategories.map((c, i) =>
         `<label class="cat-row"><input type="checkbox" data-i="${i}" ${draftCats.has(c) ? 'checked' : ''}>` +
         `<span class="cat-name">${escapeHtml(c)} <span class="cat-count">(${catCounts[c] || 0})</span></span></label>`
       ).join('');
