@@ -1201,10 +1201,10 @@
     .c-bottom .card-price { font-size: 16.5px; margin: 0; }
     .c-head { display: flex; align-items: flex-start; gap: 8px; }
     .c-head .card-name { flex: 1 1 auto; min-width: 0; }
-    .c-head .card-qty { flex: none; margin: 0; gap: 4px; }
-    .c-head .qty-btn { width: 32px !important; height: 32px !important; min-width: 32px; min-height: 32px; font-size: 16px; padding: 0; }
-    .c-head .qty-display { min-width: 18px; font-size: 15px; white-space: nowrap; }
-    .c-body .search-links { margin: 0 0 0 auto; gap: 6px; flex-wrap: nowrap; }
+    .c-head .search-links { flex: none; align-self: flex-start; margin: 0 0 0 auto; gap: 6px; flex-wrap: nowrap; }
+    .c-bottom .card-qty { flex: none; margin: 0; gap: 4px; }
+    .c-bottom .qty-btn { width: 32px !important; height: 32px !important; min-width: 32px; min-height: 32px; font-size: 16px; padding: 0; }
+    .c-bottom .qty-display { min-width: 18px; font-size: 15px; white-space: nowrap; text-align: center; }
     @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .thumb-wrap { background: #f3e9da; } }
 
     /* Two-column layout for larger screens */
@@ -1256,7 +1256,9 @@
     /* ---- 가독성 (Pretendard) ---- */
     body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
     .header-title { font-weight: 800; letter-spacing: -0.02em; }
-    .header-tagline { font-style: normal; }
+    .header-tagline { font-style: normal; animation: tagFade 0.4s ease-out both; }
+    @keyframes tagFade { from { opacity: 0; } to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .header-tagline { animation: none; } }
     .card-name, .c-body .card-name { font-weight: 600; letter-spacing: -0.02em; }
     .card-price, .c-bottom .card-price { font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
     .c-body .card-meta { font-size: 12px; }
@@ -1324,8 +1326,8 @@
     .unit-opt.on { background: var(--color-mustard); color: #3a2618; }
     .box-est { font-size: 11.5px; color: var(--color-burnt-orange); font-weight: 600; font-variant-numeric: tabular-nums; margin: 0; }
     .box-est[hidden] { display: none; }
-    .c-tools { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
-    .c-head .qty-display.boxed { min-width: 44px; }
+    .c-tools { display: flex; align-items: center; justify-content: flex-start; gap: 6px; margin-top: 2px; }
+    .c-bottom .qty-display.boxed { min-width: 44px; }
 
     /* 비교 사이트 아이콘 */
     .search-links { display: flex; gap: 6px; align-items: center; }
@@ -1348,6 +1350,9 @@
     .cart-item.off { opacity: .55; }
     .cart-item .unit-toggle { align-self: flex-start; }
     .cart-item .box-est { margin-top: -2px; }
+    .cart-summary-sub { margin: -4px 0 8px; text-align: right; font-size: 11.5px; color: var(--color-text-secondary); }
+    .cart-summary-sub[hidden] { display: none; }
+    .btn-send { white-space: nowrap; }
     .cart-note { margin-top: 10px; font-size: 12px; color: var(--color-text-secondary); }
     .cart-note[hidden] { display: none; }
     .btn-send { min-height: 48px; }
@@ -1411,7 +1416,7 @@
         <button type="button" class="lock-now" onclick="lockNow()" aria-label="잠그기" title="잠그기">🔒</button>
       </div>
       <p class="header-subtitle">가족 전용 · 재판매 금지 · 가격 기준일 <span id="updated-date">-</span></p>
-      <p class="header-tagline">깊어가는 가을, 필요한 것만 소담하게 담아요</p>
+      <p class="header-tagline" id="headerTagline">깊어가는 가을, 필요한 것만 소담하게 담아요</p>
       <span class="header-leaf" aria-hidden="true">🍁</span>
       <span class="header-leaf" aria-hidden="true">🍂</span>
       <span class="header-leaf" aria-hidden="true">🍁</span>
@@ -1492,6 +1497,7 @@
             <span>총 수량</span>
             <span id="cartSummaryQty">0개</span>
           </div>
+          <div class="cart-summary-sub" id="cartSummaryNote" hidden></div>
           <div class="cart-summary-total">
             <span>총 금액</span>
             <span id="cartSummaryTotal">0원</span>
@@ -1562,7 +1568,7 @@
     // ========== CONFIG ==========
     let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
     let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
-    const APP_VERSION = 'v2.3';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_VERSION = 'v2.4';      // 화면 아래 모퉁이에 표시되는 버전
     const APP_BUILD = '2026-10-07';
 
     // ---- 소주·맥주 박스 주문 규칙 (직접 고쳐 쓰는 표) ----
@@ -1579,7 +1585,50 @@
       { kind: '맥주', pattern: /병/, ml: [300, 700], size: 20, label: '병' },
       { kind: '맥주', pattern: null, ml: [300, 520], size: 24, label: '캔' },
     ];
+
+    // ---- 머리글 한 줄 문구 (열 때마다 무작위, 직전과 같은 문구는 피해요) ----
+    const TAGLINES = [
+      "깊어가는 가을, 필요한 것만 소담하게 담아요",
+      "단풍처럼 고운 하루, 장바구니도 넉넉하게",
+      "바람이 선선한 날, 꼭 필요한 것부터 챙겨요",
+      "가을볕 아래 천천히, 오늘의 장보기",
+      "낙엽 밟는 소리처럼 가볍게 골라 담아요",
+      "노을빛 저녁 식탁을 위한 장보기",
+      "햇살 좋은 가을날, 마음까지 든든하게",
+      "한 잎 한 잎 모으듯, 알뜰하게 담아요",
+      "따뜻한 차 한 잔 같은 장보기 시간",
+      "풍성한 계절, 우리 집 곳간도 풍성하게",
+      "오늘도 수고한 가족을 위한 작은 선물",
+      "가을 하늘처럼 맑게, 꼭 필요한 만큼만",
+      "소복이 쌓인 낙엽처럼 정성껏 골라요",
+      "선선한 바람 따라 장바구니 산책",
+      "황금빛 들녘처럼 넉넉한 하루 되세요",
+      "단풍 구경 가듯 설레는 장보기",
+      "쌀쌀한 아침엔 따끈한 국물이 생각나요",
+      "가족의 웃음을 담는 황금마차",
+      "천천히 고르고, 알뜰하게 담아요",
+      "가을밤 긴긴밤, 간식도 미리 챙겨요",
+      "바스락 가을 길, 황금마차가 함께해요",
+      "오늘 저녁 메뉴는 정하셨나요?",
+      "계절이 바뀌듯 장바구니도 새롭게",
+      "은은한 가을 향기 담아 장보기",
+      "작은 것 하나에도 마음을 담아요"
+    ];
     // ========== END CONFIG ==========
+
+    // 페이지가 열리자마자 무작위 문구를 보여줘요 (잠금 해제를 기다리지 않아요)
+    (function setRandomTagline() {
+      try {
+        const el = document.getElementById('headerTagline');
+        if (!el || !TAGLINES.length) return;
+        let last = -1;
+        try { const v = parseInt(localStorage.getItem('hm_tag'), 10); if (Number.isInteger(v)) last = v; } catch (_) {}
+        let i = Math.floor(Math.random() * TAGLINES.length);
+        if (TAGLINES.length > 1 && i === last) i = (i + 1 + Math.floor(Math.random() * (TAGLINES.length - 1))) % TAGLINES.length;
+        el.textContent = TAGLINES[i];
+        try { localStorage.setItem('hm_tag', String(i)); } catch (_) {}
+      } catch (_) {}
+    })();
 
     let allProducts = [];
     let allCategories = [];
@@ -2117,19 +2166,19 @@
             <div class="c-body">
               <div class="c-head">
                 <div class="card-name" style="cursor:pointer;" onclick="openZoom('${item.id}')">${escapeHtml(shownName)}</div>
+                <div class="search-links">${searchIconsHtml(item)}</div>
+              </div>
+              <div class="card-meta">${badges.join('')}<span>${metaLine}</span></div>
+              <div class="c-bottom">
+                <div class="card-price">${item.p.toLocaleString('ko-KR')}원</div>
                 <div class="card-qty">
                   <button class="qty-btn" onclick="updateQty('${item.id}', -1)" aria-label="빼기">−</button>
                   <div class="qty-display">${qtyLabel(item.id)}</div>
                   <button class="qty-btn" onclick="updateQty('${item.id}', 1)" aria-label="담기">+</button>
                 </div>
               </div>
-              <div class="card-meta">${badges.join('')}<span>${metaLine}</span></div>
-              <div class="c-bottom">
-                <div class="card-price">${item.p.toLocaleString('ko-KR')}원</div>
-                ${bi ? '' : `<div class="search-links">${searchIconsHtml(item)}</div>`}
-              </div>
               ${bi ? `<div class="box-est" ${isBox(item.id) ? '' : 'hidden'}>${boxEstText(item.id)}</div>
-              <div class="c-tools">${unitToggleHtml(item.id)}<div class="search-links">${searchIconsHtml(item)}</div></div>` : ''}
+              <div class="c-tools">${unitToggleHtml(item.id)}</div>` : ''}
             </div>
           </div>
         `;
@@ -2308,6 +2357,28 @@
       return out;
     }
 
+    // 낱개/박스 단위별 수량 합계 (박스 안 병 수는 섞지 않아요)
+    function qtyParts(lines) {
+      let ea = 0, box = 0;
+      lines.forEach(l => { if (l.box) box += l.qty; else ea += l.qty; });
+      return { ea, box };
+    }
+    function qtyText(ea, box) {
+      const parts = [];
+      if (ea > 0) parts.push(ea + '개');
+      if (box > 0) parts.push(box + '박스');
+      return parts.length ? parts.join(' + ') : '0개';
+    }
+    // 박스 안 낱개 수 문구 (예: "40병"), 단위가 섞이면 "개"
+    function boxInnerText(lines) {
+      const by = {};
+      lines.forEach(l => { if (l.box) by[l.label || '개'] = (by[l.label || '개'] || 0) + l.pieces; });
+      const keys = Object.keys(by);
+      if (keys.length === 0) return '';
+      if (keys.length === 1) return by[keys[0]] + keys[0];
+      return keys.reduce((a, k) => a + by[k], 0) + '개';
+    }
+
     function refreshCard(id) {
       const card = document.getElementById('card-' + id);
       if (!card) return;
@@ -2369,16 +2440,21 @@
 
     function updateCartBar() {
       const lines = cartLines();
-      const qty = lines.reduce((a, l) => a + l.qty, 0);
+      const kinds = lines.length;   // 배지는 병 수가 아니라 담은 상품 종류 수
       const total = lines.reduce((a, l) => a + (l.checked ? l.total : 0), 0);
       const badge = document.getElementById('cartBadge');
       const pill = document.getElementById('cartPill');
-      if (qty > 0) {
-        badge.textContent = qty > 99 ? '99+' : qty;
+      const fab = document.getElementById('floatingCartBtn');
+      if (kinds > 0) {
+        const qp = qtyParts(lines);
+        const tip = `장바구니 ${kinds}종 · ${qtyText(qp.ea, qp.box)}`;
+        fab.title = tip; fab.setAttribute('aria-label', tip);
+        badge.textContent = kinds > 99 ? '99+' : kinds;
         badge.classList.add('show');
         pill.textContent = total.toLocaleString('ko-KR') + '원';
         pill.classList.add('show');
       } else {
+        fab.title = '장바구니'; fab.setAttribute('aria-label', '장바구니');
         badge.classList.remove('show');
         pill.classList.remove('show');
       }
@@ -2579,16 +2655,20 @@
 
       // Summary (체크한 상품만)
       const sel = lines.filter(l => l.checked);
-      const totalQty = sel.reduce((a, l) => a + l.pieces, 0);
+      const qp = qtyParts(sel);
+      const qtyStr = qtyText(qp.ea, qp.box);
       const totalPrice = sel.reduce((a, l) => a + l.total, 0);
-      document.getElementById('cartSummaryQty').textContent = `${totalQty}개`;
+      document.getElementById('cartSummaryQty').textContent = qtyStr;
+      const noteEl = document.getElementById('cartSummaryNote');
+      noteEl.hidden = qp.box === 0;
+      noteEl.textContent = qp.box > 0 ? `(박스 안 ${boxInnerText(sel)} 포함 · 예상)` : '';
       document.getElementById('cartSummaryTotal').textContent = `${totalPrice.toLocaleString('ko-KR')}원`;
       document.getElementById('cartBoxNote').hidden = !lines.some(l => l.box);
 
       // Send button
       const sendBtn = document.getElementById('sendBtn');
       sendBtn.disabled = sel.length === 0;
-      sendBtn.textContent = sel.length > 0 ? `선택한 ${sel.length}개 문자로 주문 · ${totalPrice.toLocaleString('ko-KR')}원` : '문자로 주문 보내기';
+      sendBtn.textContent = sel.length > 0 ? `문자로 주문 · ${qtyStr} · ${totalPrice.toLocaleString('ko-KR')}원` : '문자로 주문 보내기';
       if (scrollEl) scrollEl.scrollTop = prevTop;
     }
 
@@ -2668,7 +2748,7 @@
     function buildOrderText(lines) {
       syncOrderFields();
       lines = lines || cartLines().filter(l => l.checked);
-      const totalQty = lines.reduce((a, l) => a + l.pieces, 0);
+      const qp = qtyParts(lines);
       const totalPrice = lines.reduce((a, l) => a + l.total, 0);
 
       const now = new Date();
@@ -2678,7 +2758,7 @@
       lines.forEach((l, i) => {
         text += `${i + 1}. ${lineText(l)}\n`;
       });
-      text += `----\n총 ${lines.length}종 ${totalQty}개 / 합계 ${totalPrice.toLocaleString('ko-KR')}원`;
+      text += `----\n총 ${lines.length}종 · ${qtyText(qp.ea, qp.box)} / 합계 ${totalPrice.toLocaleString('ko-KR')}원`;
       if (orderMemo.trim()) {
         text += `\n메모: ${orderMemo}`;
       }
@@ -2765,6 +2845,8 @@
           unit: l.box ? 'box' : 'ea', boxSize: l.box ? l.per : 1, boxLabel: l.box ? l.label : ''
         })),
         totalQty: lines.reduce((a, l) => a + l.pieces, 0),
+        totalEa: qtyParts(lines).ea,
+        totalBox: qtyParts(lines).box,
         totalPrice: lines.reduce((a, l) => a + l.total, 0)
       };
       let orders = getFromStorage('hm_orders', []);
@@ -2864,10 +2946,13 @@
           return `<li><span class="hi-name">${escapeHtml(it.n)}<small>${escapeHtml(it.s)}</small></span>` +
             `<span class="hi-price">${line.toLocaleString('ko-KR')}원<small>${qtyTxt}</small></span></li>`;
         }).join('');
+        let hEa = 0, hBox = 0;
+        if (Number.isFinite(o.totalEa) && Number.isFinite(o.totalBox)) { hEa = o.totalEa; hBox = o.totalBox; }
+        else items.forEach(it => { const q = parseInt(it.qty, 10) || 0; if (it.unit === 'box') hBox += q; else hEa += q; });
         const oid = Number(o.id);
         html += `<div class="hist-card">
           <div class="hist-top">
-            <div><span class="hist-time">${pad2(d.getHours())}:${pad2(d.getMinutes())}</span><span class="hist-sum">${items.length}개 상품</span></div>
+            <div><span class="hist-time">${pad2(d.getHours())}:${pad2(d.getMinutes())}</span><span class="hist-sum">${items.length}종 · ${qtyText(hEa, hBox)}</span></div>
             <div class="hist-total">${(o.totalPrice || 0).toLocaleString('ko-KR')}원</div>
           </div>
           ${o.name ? `<div class="hist-memo">주문자: ${escapeHtml(o.name)}</div>` : ''}
