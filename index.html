@@ -1375,15 +1375,25 @@
     .hist-items { margin-top: 6px; }
     .hist-items summary { cursor: pointer; font-size: 13px; color: var(--color-burnt-orange); font-weight: 600; min-height: 32px; display: flex; align-items: center; }
     .hist-items ul { list-style: none; margin: 4px 0 0; padding: 0; }
-    .hist-items li { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-top: 1px solid var(--color-border); font-size: 12.5px; }
-    .hist-items .hi-name { flex: 1; min-width: 0; word-break: break-word; }
-    .hist-items .hi-name small { display: block; color: var(--color-text-secondary); font-size: 11.5px; }
+    .hist-items li { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 0; border-top: 1px solid var(--color-border); font-size: 12.5px; }
+    .hist-items .hi-thumb.thumb-wrap { flex: 0 0 40px; width: 40px; height: 40px; border-radius: 8px; background: #fff; }
+    .hist-items .hi-thumb.thumb-wrap.noimg::after { font-size: 16px; }
+    .hist-items .hi-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hist-items .hi-name small { display: block; overflow: hidden; text-overflow: ellipsis; color: var(--color-text-secondary); font-size: 11.5px; }
     .hist-items .hi-price { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .hist-items .hi-price small { display: block; color: var(--color-text-secondary); font-size: 11.5px; }
+    .hist-items .hi-chk { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; width: 28px; height: 40px; margin: 0 -2px 0 -4px; cursor: pointer; }
+    .hist-items .hi-chk input, .hist-items .hi-all input { width: 20px; height: 20px; margin: 0; accent-color: var(--color-maple); cursor: pointer; }
+    .hist-items li.sel-mode { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .hist-items li.picked { background: rgba(181,69,42,.08); }
+    .hist-items .hi-all { display: flex; align-items: center; gap: 10px; min-height: 40px; margin-top: 2px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .hist-items .hi-all .hi-cnt { margin-left: auto; font-weight: 500; color: var(--color-text-secondary); font-size: 12.5px; }
     .hist-btns { display: flex; gap: 8px; margin-top: 8px; }
     .hist-btns button { flex: 1; min-height: 40px; border-radius: 10px; border: 1.5px solid var(--color-border); background: var(--color-card); color: var(--color-fg); font-weight: 600; font-size: 13px; cursor: pointer; }
     .hist-btns .hb-redo { border: none; color: #fff; background: linear-gradient(135deg, var(--color-maple) 0%, var(--color-burnt-orange) 100%); }
     .hist-btns .hb-del { color: var(--color-red); }
+    .hist-btns .hb-delsel { border: none; color: #fff; background: var(--color-red); }
+    .hist-btns .hb-delsel:disabled { opacity: .4; cursor: default; }
     .lock-now.hist-now { right: 62px; width: auto; height: 40px; padding: 0 12px 0 10px; gap: 4px; font-size: 14px; font-weight: 600; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
     .lock-now.hist-now .hn-ico { font-size: 22px; line-height: 1; }
     .lock-now:active { background: rgba(255,255,255,.32); }
@@ -1568,7 +1578,7 @@
     // ========== CONFIG ==========
     let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
     let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
-    const APP_VERSION = 'v2.4';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_VERSION = 'v2.5';      // 화면 아래 모퉁이에 표시되는 버전
     const APP_BUILD = '2026-10-07';
 
     // ---- 소주·맥주 박스 주문 규칙 (직접 고쳐 쓰는 표) ----
@@ -2910,6 +2920,7 @@
     }
     function hideHistory() {
       document.getElementById('historySheet').classList.remove('open');
+      histSel = null;
       unlockBody('hist');
     }
     function closeHistory() {
@@ -2918,14 +2929,29 @@
     }
     overlayHiders.hist = hideHistory;
 
+    // 선택 삭제 모드: 한 번에 한 주문 카드만 {id: 주문 id, idx: Set(상품 index)}
+    let histSel = null;
+
+    function histItemQty(it) { return Math.max(0, parseInt(it.qty, 10) || 0); }
+    function histItemLine(it) {
+      const box = it.unit === 'box';
+      return (it.p || 0) * histItemQty(it) * (box ? (it.boxSize || 1) : 1);
+    }
+
     function renderHistory() {
       const body = document.getElementById('historyBody');
+      const prevTop = body.scrollTop;
+      // 펼쳐 둔 주문 목록은 다시 그려도 유지
+      const openIds = new Set([...body.querySelectorAll('details.hist-items[open]')].map(el => el.dataset.oid));
       let orders = getFromStorage('hm_orders', []);
       if (!Array.isArray(orders)) orders = [];
+      if (histSel && !orders.some(o => Number(o.id) === histSel.id)) histSel = null;
+      if (histSel) openIds.add(String(histSel.id));
       let html = '<div class="hist-note">이 휴대폰에만 저장돼요</div>';
       if (orders.length === 0) {
         html += '<div class="hist-empty">아직 주문 내역이 없어요</div>';
         body.innerHTML = html;
+        body.scrollTop = prevTop;
         return;
       }
       let lastDay = null;
@@ -2938,33 +2964,96 @@
           html += `<div class="hist-day">${day}</div>`;
         }
         const items = Array.isArray(o.items) ? o.items : [];
-        const lis = items.map(it => {
+        const oid = Number(o.id);
+        const selMode = !!histSel && histSel.id === oid;
+        const lis = items.map((it, i) => {
           const box = it.unit === 'box';
           const size = it.boxSize || 1;
-          const qtyTxt = box ? `${it.qty}박스 (${it.qty * size}${escapeHtml(it.boxLabel || '개')})` : `${it.qty}개`;
-          const line = (it.p || 0) * it.qty * (box ? size : 1);
-          return `<li><span class="hi-name">${escapeHtml(it.n)}<small>${escapeHtml(it.s)}</small></span>` +
-            `<span class="hi-price">${line.toLocaleString('ko-KR')}원<small>${qtyTxt}</small></span></li>`;
+          const qty = histItemQty(it);
+          const qtyTxt = box ? `${qtyText(0, qty)} (${qty * size}${escapeHtml(it.boxLabel || '개')})` : qtyText(qty, 0);
+          const line = histItemLine(it);
+          const prod = itemById.get(it.id);
+          const thumb = prod
+            ? `<div class="thumb-wrap hi-thumb" data-id="${escapeHtml(it.id)}" data-c="${escapeHtml(prod.c)}"></div>`
+            : `<div class="thumb-wrap hi-thumb noimg" data-done="1"></div>`;
+          const picked = selMode && histSel.idx.has(i);
+          const chk = selMode
+            ? `<label class="hi-chk"><input type="checkbox" ${picked ? 'checked' : ''} aria-label="삭제할 상품 선택" onclick="event.stopPropagation()" onchange="toggleHistItem(${i})"></label>` : '';
+          return `<li class="${selMode ? 'sel-mode' : ''}${picked ? ' picked' : ''}"${selMode ? ` onclick="toggleHistItem(${i})"` : ''}>${chk}${thumb}` +
+            `<span class="hi-name">${escapeHtml(it.n)}<small>${escapeHtml(it.s)}</small></span>` +
+            `<span class="hi-price">${qtyTxt}<small>${line.toLocaleString('ko-KR')}원</small></span></li>`;
         }).join('');
         let hEa = 0, hBox = 0;
         if (Number.isFinite(o.totalEa) && Number.isFinite(o.totalBox)) { hEa = o.totalEa; hBox = o.totalBox; }
         else items.forEach(it => { const q = parseInt(it.qty, 10) || 0; if (it.unit === 'box') hBox += q; else hEa += q; });
-        const oid = Number(o.id);
-        html += `<div class="hist-card">
+        const nSel = selMode ? histSel.idx.size : 0;
+        const allRow = selMode
+          ? `<label class="hi-all"><input type="checkbox" class="hi-allchk" onchange="toggleHistAll(this.checked)"><span>전체 선택</span><span class="hi-cnt">${nSel}개 선택</span></label>` : '';
+        const btns = selMode
+          ? `<button type="button" class="hb-delsel" onclick="askDeleteSelected(${oid})" ${nSel === 0 ? 'disabled' : ''}>선택 삭제 (${nSel})</button>
+            <button type="button" class="hb-cancel" onclick="cancelHistSelect()">취소</button>`
+          : `<button type="button" class="hb-redo" onclick="reorderFromHistory(${oid})">다시 담기</button>
+            <button type="button" class="hb-del" onclick="startHistSelect(${oid})">삭제</button>`;
+        html += `<div class="hist-card" data-oid="${oid}">
           <div class="hist-top">
             <div><span class="hist-time">${pad2(d.getHours())}:${pad2(d.getMinutes())}</span><span class="hist-sum">${items.length}종 · ${qtyText(hEa, hBox)}</span></div>
             <div class="hist-total">${(o.totalPrice || 0).toLocaleString('ko-KR')}원</div>
           </div>
           ${o.name ? `<div class="hist-memo">주문자: ${escapeHtml(o.name)}</div>` : ''}
           ${o.memo ? `<div class="hist-memo">메모: ${escapeHtml(o.memo)}</div>` : ''}
-          <details class="hist-items"><summary>상품 목록 보기</summary><ul>${lis}</ul></details>
-          <div class="hist-btns">
-            <button type="button" class="hb-redo" onclick="reorderFromHistory(${oid})">다시 담기</button>
-            <button type="button" class="hb-del" onclick="askDeleteOrder(${oid})">삭제</button>
-          </div>
+          <details class="hist-items" data-oid="${oid}"${openIds.has(String(oid)) ? ' open' : ''}><summary>상품 목록 보기</summary>${allRow}<ul>${lis}</ul></details>
+          <div class="hist-btns">${btns}</div>
         </div>`;
       });
       body.innerHTML = html;
+      body.scrollTop = prevTop;
+      updateHistSelUI();
+      fillThumbs();
+    }
+
+    // 선택 모드의 체크 상태/개수/버튼만 제자리에서 갱신
+    function updateHistSelUI() {
+      if (!histSel) return;
+      const card = document.querySelector(`#historyBody .hist-card[data-oid="${histSel.id}"]`);
+      if (!card) return;
+      const lis = card.querySelectorAll('.hist-items li');
+      lis.forEach((li, i) => {
+        const on = histSel.idx.has(i);
+        li.classList.toggle('picked', on);
+        const cb = li.querySelector('.hi-chk input');
+        if (cb) cb.checked = on;
+      });
+      const n = histSel.idx.size;
+      const all = card.querySelector('.hi-allchk');
+      if (all) { all.checked = lis.length > 0 && n === lis.length; all.indeterminate = n > 0 && n < lis.length; }
+      const cnt = card.querySelector('.hi-cnt');
+      if (cnt) cnt.textContent = `${n}개 선택`;
+      const del = card.querySelector('.hb-delsel');
+      if (del) { del.disabled = n === 0; del.textContent = `선택 삭제 (${n})`; }
+    }
+
+    function startHistSelect(orderId) {
+      histSel = { id: Number(orderId), idx: new Set() };
+      renderHistory();
+      const card = document.querySelector(`#historyBody .hist-card[data-oid="${histSel.id}"]`);
+      if (card && card.scrollIntoView) card.scrollIntoView({ block: 'nearest' });
+    }
+    function cancelHistSelect() {
+      histSel = null;
+      renderHistory();
+    }
+    function toggleHistItem(i) {
+      if (!histSel) return;
+      if (histSel.idx.has(i)) histSel.idx.delete(i); else histSel.idx.add(i);
+      updateHistSelUI();
+    }
+    function toggleHistAll(on) {
+      if (!histSel) return;
+      const orders = getFromStorage('hm_orders', []);
+      const o = Array.isArray(orders) ? orders.find(x => Number(x.id) === histSel.id) : null;
+      const n = o && Array.isArray(o.items) ? o.items.length : 0;
+      histSel.idx = new Set(on ? Array.from({ length: n }, (_, i) => i) : []);
+      updateHistSelUI();
     }
 
     function reorderFromHistory(orderId) {
@@ -2989,12 +3078,36 @@
       showToast('장바구니에 담았어요' + (skipped ? ` (판매 종료 ${skipped}개 제외)` : ''));
     }
 
-    function askDeleteOrder(orderId) {
-      showConfirm('이 주문 내역을 삭제할까요?', () => {
+    function askDeleteSelected(orderId) {
+      if (!histSel || histSel.id !== Number(orderId) || histSel.idx.size === 0) return;
+      const picked = new Set(histSel.idx);
+      const orders0 = getFromStorage('hm_orders', []);
+      const o0 = Array.isArray(orders0) ? orders0.find(x => Number(x.id) === Number(orderId)) : null;
+      if (!o0) return;
+      const total = (o0.items || []).length;
+      const msg = picked.size >= total ? '이 주문 전체를 삭제할까요?' : `선택한 ${picked.size}개 상품을 주문 내역에서 삭제할까요?`;
+      showConfirm(msg, () => {
         let orders = getFromStorage('hm_orders', []);
         if (!Array.isArray(orders)) orders = [];
-        saveToStorage('hm_orders', orders.filter(o => o.id !== orderId));
-        if (lastOrderUndo && lastOrderUndo.orderId === orderId) lastOrderUndo = null;
+        const o = orders.find(x => Number(x.id) === Number(orderId));
+        if (o) {
+          const left = (o.items || []).filter((_, i) => !picked.has(i));
+          if (left.length === 0) {
+            orders = orders.filter(x => x !== o);
+          } else {
+            o.items = left;
+            o.totalEa = 0; o.totalBox = 0; o.totalQty = 0; o.totalPrice = 0;
+            left.forEach(it => {
+              const q = histItemQty(it), box = it.unit === 'box';
+              if (box) o.totalBox += q; else o.totalEa += q;
+              o.totalQty += q * (box ? (it.boxSize || 1) : 1);
+              o.totalPrice += histItemLine(it);
+            });
+          }
+          saveToStorage('hm_orders', orders);
+          if (lastOrderUndo && lastOrderUndo.orderId === o.id) lastOrderUndo = null;
+        }
+        histSel = null;
         renderHistory();
       }, '삭제');
     }
