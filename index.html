@@ -1285,7 +1285,7 @@
       background: linear-gradient(135deg, var(--color-maple), var(--color-burnt-orange)); }
     .lock-btn:disabled { opacity: .7; }
     .lock-msg { min-height: 18px; margin: 2px 0 0; font-size: 13px; color: #c62828; }
-    .lock-now { position: absolute; top: 14px; right: 14px; z-index: 2; background: rgba(255,255,255,.18); border: none; border-radius: 999px; width: 34px; height: 34px; font-size: 15px; cursor: pointer; }
+    .lock-now { position: absolute; top: 14px; right: 14px; z-index: 2; background: rgba(255,255,255,.18); border: none; border-radius: 999px; width: 40px; height: 40px; font-size: 18px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; color: #fff; }
     @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
     @media (prefers-reduced-motion: reduce) { .lock-logo { animation: none; } }
 
@@ -1379,7 +1379,15 @@
     .hist-btns button { flex: 1; min-height: 40px; border-radius: 10px; border: 1.5px solid var(--color-border); background: var(--color-card); color: var(--color-fg); font-weight: 600; font-size: 13px; cursor: pointer; }
     .hist-btns .hb-redo { border: none; color: #fff; background: linear-gradient(135deg, var(--color-maple) 0%, var(--color-burnt-orange) 100%); }
     .hist-btns .hb-del { color: var(--color-red); }
-    .lock-now.hist-now { right: 56px; }
+    .lock-now.hist-now { right: 62px; width: auto; height: 40px; padding: 0 12px 0 10px; gap: 4px; font-size: 14px; font-weight: 600; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
+    .lock-now.hist-now .hn-ico { font-size: 22px; line-height: 1; }
+    .lock-now:active { background: rgba(255,255,255,.32); }
+    /* 장바구니 머리줄: 주문내역 알약 버튼 + 닫기 */
+    .cart-head-right { display: flex; align-items: center; gap: 10px; }
+    .cart-hist-btn { display: inline-flex; align-items: center; gap: 4px; height: 40px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--color-maple); background: var(--color-card); color: var(--color-maple); font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+    .cart-hist-btn .hn-ico { font-size: 20px; line-height: 1; }
+    .cart-hist-btn:active { background: rgba(181,69,42,.12); }
+    .cart-close { width: 40px; height: 40px; }
   </style>
 </head>
 <body>
@@ -1399,7 +1407,7 @@
       <div class="header-title-row">
         <img src="mascot.svg" class="brand-logo" alt="황금마차" width="52" height="52">
         <h1 class="header-title">황금마차</h1>
-        <button type="button" class="lock-now hist-now" onclick="openHistory()" aria-label="주문 내역" title="주문 내역">📋</button>
+        <button type="button" class="lock-now hist-now" id="histBtn" onclick="openHistory()" aria-label="주문 내역" title="주문 내역"><span class="hn-ico" aria-hidden="true">📋</span><span>주문내역</span></button>
         <button type="button" class="lock-now" onclick="lockNow()" aria-label="잠그기" title="잠그기">🔒</button>
       </div>
       <p class="header-subtitle">가족 전용 · 재판매 금지 · 가격 기준일 <span id="updated-date">-</span></p>
@@ -1470,7 +1478,10 @@
     <div class="cart-sheet-inner">
       <div class="cart-header">
         <h2>장바구니</h2>
-        <button class="cart-close" onclick="closeCart()">&times;</button>
+        <div class="cart-head-right">
+          <button type="button" class="cart-hist-btn" id="cartHistBtn" onclick="openHistory()" aria-label="주문 내역"><span class="hn-ico" aria-hidden="true">📋</span><span>주문내역</span></button>
+          <button class="cart-close" onclick="closeCart()" aria-label="닫기">&times;</button>
+        </div>
       </div>
 
       <div class="cart-content" id="cartScroll">
@@ -1551,7 +1562,7 @@
     // ========== CONFIG ==========
     let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
     let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
-    const APP_VERSION = 'v2.2';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_VERSION = 'v2.3';      // 화면 아래 모퉁이에 표시되는 버전
     const APP_BUILD = '2026-10-07';
 
     // ---- 소주·맥주 박스 주문 규칙 (직접 고쳐 쓰는 표) ----
@@ -2146,6 +2157,43 @@
       displayedCount = limit;
     }
 
+    // ---------- 겹침 화면 스택 + 뒤로가기(History API) ----------
+    // 시트·확대·확인창이 열리면 스택에 쌓고 pushState 해요.
+    // 뒤로가기(popstate)는 맨 위 화면 하나만 닫아요. 화면 안의 버튼으로 닫을 땐 history.back()으로 항목을 하나 되돌려요.
+    try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (_) {}
+    const overlayStack = [];
+    let ignorePops = 0;
+    const overlayHiders = {};   // name -> 화면만 닫는 함수 (history는 건드리지 않음)
+    function pushOverlay(name) {
+      if (overlayStack.includes(name)) return;
+      overlayStack.push(name);
+      try { history.pushState({ hmOverlay: name }, ''); } catch (_) {}
+    }
+    function consumeOverlayEntry(delay) {
+      const go = () => {
+        let has = false;
+        try { has = !!(history.state && history.state.hmOverlay); } catch (_) {}
+        if (!has) return;
+        ignorePops++;
+        history.back();
+      };
+      if (delay) setTimeout(go, delay); else go();
+    }
+    // UI로 닫기: 스택에서 빼고 history 항목 하나를 소비
+    function popOverlay(name, delay) {
+      const i = overlayStack.lastIndexOf(name);
+      if (i < 0) return;
+      overlayStack.splice(i, 1);
+      consumeOverlayEntry(delay);
+    }
+    window.addEventListener('popstate', () => {
+      if (ignorePops > 0) { ignorePops--; return; }
+      const name = overlayStack.pop();
+      if (!name) return;
+      const hide = overlayHiders[name];
+      if (hide) hide();
+    });
+
     // ---------- 본문 스크롤 잠금 (시트·팝업이 열려 있는 동안) ----------
     const scrollLocks = new Set();
     let lockedY = 0;
@@ -2346,17 +2394,24 @@
     }
 
     function openCart() {
+      if (document.getElementById('cartSheet').classList.contains('open')) return;
       renderCartSheet();
       document.getElementById('cartSheet').classList.add('open');
       lockBody('cart');
+      pushOverlay('cart');
       const sc = document.getElementById('cartScroll');
       if (sc) sc.scrollTop = 0;
     }
 
-    function closeCart() {
+    function hideCart() {
       document.getElementById('cartSheet').classList.remove('open');
       unlockBody('cart');
     }
+    function closeCart(delay) {
+      hideCart();
+      popOverlay('cart', typeof delay === 'number' ? delay : 0);
+    }
+    overlayHiders.cart = hideCart;
 
     // ---------- 비교 사이트 아이콘 (각 사이트 파비콘) ----------
     function searchIconsHtml(item) {
@@ -2419,6 +2474,7 @@
 
       modal.classList.add('open');
       lockBody('zoom');
+      pushOverlay('zoom');
 
       // Try to load full-size image
       const fullImg = new Image();
@@ -2451,10 +2507,15 @@
       document.getElementById('zoomQty').innerHTML = html;
     }
 
-    function closeZoom() {
+    function hideZoom() {
       document.getElementById('zoomModal').classList.remove('open');
       unlockBody('zoom');
     }
+    function closeZoom() {
+      hideZoom();
+      popOverlay('zoom');
+    }
+    overlayHiders.zoom = hideZoom;
 
     function updateQtyZoom(id, delta) {
       updateQty(id, delta);   // 확대 화면은 updateQty 안에서 다시 그려져요
@@ -2565,6 +2626,7 @@
       ok.textContent = okLabel || '확인';
       ok.onclick = () => { closeConfirm(); onOk(); };
       document.getElementById('confirmDialog').classList.add('open');
+      pushOverlay('confirm');
     }
 
     function showClearConfirm() {
@@ -2579,9 +2641,14 @@
       });
     }
 
-    function closeConfirm() {
+    function hideConfirm() {
       document.getElementById('confirmDialog').classList.remove('open');
     }
+    function closeConfirm() {
+      hideConfirm();
+      popOverlay('confirm');
+    }
+    overlayHiders.confirm = hideConfirm;
 
     // ---------- 주문 문구 ----------
     function lineText(l) {
@@ -2707,6 +2774,8 @@
 
       // 2) 문자 앱 열기
       goSms(smsUrl);
+      // 문자 앱으로 넘어간 뒤 장바구니를 닫고(history 항목도 정리), 잠시 뒤 항목을 되돌려요
+      closeCart(400);
 
       // 3) 주문한(체크한) 상품만 장바구니에서 빼기
       const removed = lines.map(l => ({ id: l.id, qty: l.qty, box: l.box }));
@@ -2750,15 +2819,22 @@
     function pad2(n) { return String(n).padStart(2, '0'); }
 
     function openHistory() {
+      if (document.getElementById('historySheet').classList.contains('open')) return;
       renderHistory();
       document.getElementById('historySheet').classList.add('open');
       document.getElementById('historyBody').scrollTop = 0;
       lockBody('hist');
+      pushOverlay('hist');
     }
-    function closeHistory() {
+    function hideHistory() {
       document.getElementById('historySheet').classList.remove('open');
       unlockBody('hist');
     }
+    function closeHistory() {
+      hideHistory();
+      popOverlay('hist');
+    }
+    overlayHiders.hist = hideHistory;
 
     function renderHistory() {
       const body = document.getElementById('historyBody');
@@ -2852,11 +2928,17 @@
       document.getElementById('catSheet').classList.add('open');
       document.getElementById('catList').scrollTop = 0;
       lockBody('cats');
+      pushOverlay('cats');
     }
-    function closeCatSheet() {
+    function hideCatSheet() {
       document.getElementById('catSheet').classList.remove('open');
       unlockBody('cats');
     }
+    function closeCatSheet() {
+      hideCatSheet();
+      popOverlay('cats');
+    }
+    overlayHiders.cats = hideCatSheet;
     function onCatChange(e) {
       const t = e.target;
       if (!t || t.type !== 'checkbox') return;
