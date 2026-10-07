@@ -1365,8 +1365,9 @@
     .cart-selall .sa-count { margin-left: auto; font-weight: 500; font-size: 13px; color: var(--color-text-secondary); }
     .cart-chk { align-self: stretch; width: 30px; margin: 0 -2px 0 -4px; display: flex; align-items: center; justify-content: center; flex: none; cursor: pointer; }
     .cart-item.off { opacity: .55; }
-    .cart-item .unit-toggle { align-self: flex-start; }
-    .cart-item .box-est { margin-top: -2px; }
+    .cart-item .ci-ctrl { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+    .cart-item .ci-sum { display: flex; align-items: baseline; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: -2px; text-align: right; }
+    .cart-item .cart-item-total { font-variant-numeric: tabular-nums; }
     .cart-summary-sub { margin: -4px 0 8px; text-align: right; font-size: 11.5px; color: var(--color-text-secondary); }
     .cart-summary-sub[hidden] { display: none; }
     .btn-send { white-space: nowrap; }
@@ -1597,7 +1598,7 @@
     // ========== CONFIG ==========
     let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
     let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
-    const APP_VERSION = 'v2.6';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_VERSION = 'v2.8';      // 화면 아래 모퉁이에 표시되는 버전
     const APP_BUILD = '2026-10-07';
 
     // ---- 소주·맥주 박스 주문 규칙 (직접 고쳐 쓰는 표) ----
@@ -2771,14 +2772,18 @@
                 </div>
                 <button class="remove-btn" onclick="removeFromCart('${id}')" aria-label="삭제">×</button>
               </div>
+              <div class="ci-ctrl">
               ${boxInfo(item) ? unitToggleHtml(id) : ''}
               <div class="cart-item-qty">
                 <button class="qty-btn" style="width:28px;height:28px;font-size:14px;" onclick="updateQty('${id}', -1)" aria-label="빼기">−</button>
                 <div style="min-width:30px;text-align:center;font-weight:600;">${box ? qty + '박스' : qty}</div>
                 <button class="qty-btn" style="width:28px;height:28px;font-size:14px;" onclick="updateQty('${id}', 1)" aria-label="담기">+</button>
               </div>
+              </div>
+              <div class="ci-sum">
               ${box ? `<div class="box-est">= ${pieces}${escapeHtml(label)}</div>` : ''}
               <div class="cart-item-total">${total.toLocaleString('ko-KR')}원${box ? ' (예상)' : ''}</div>
+              </div>
             </div>
           `;
           container.appendChild(div);
@@ -3254,9 +3259,24 @@
       lockBody('cats');
       pushOverlay('cats');
     }
+    // 창을 어떻게 닫든(✕, 바깥 터치, Esc, 뒤로가기, 적용) 체크 상태를 그대로 적용
+    function commitDraftCats() {
+      const same = draftCats.size === selectedCats.size && [...draftCats].every(c => selectedCats.has(c));
+      if (same) return false;
+      selectedCats = new Set(draftCats);
+      saveToStorage('hm_cats', [...selectedCats]);
+      updateCatBtn();
+      return true;
+    }
     function hideCatSheet() {
-      document.getElementById('catSheet').classList.remove('open');
+      const sheet = document.getElementById('catSheet');
+      const wasOpen = sheet.classList.contains('open');
+      sheet.classList.remove('open');
       unlockBody('cats');
+      if (wasOpen && commitDraftCats()) {
+        displayedCount = 0;
+        applyFiltersAndSort({ keepTop: true });
+      }
     }
     function closeCatSheet() {
       hideCatSheet();
@@ -3280,12 +3300,7 @@
       updateCatApply();
     }
     function applyCats() {
-      selectedCats = new Set(draftCats);
-      saveToStorage('hm_cats', [...selectedCats]);
-      updateCatBtn();
-      closeCatSheet();
-      displayedCount = 0;
-      applyFiltersAndSort({ keepTop: true });
+      closeCatSheet();   // 닫을 때 hideCatSheet에서 적용됨
     }
 
     // Keyboard and overlay event handlers
