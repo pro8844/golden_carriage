@@ -1424,6 +1424,75 @@
     .cart-hist-btn .hn-ico { font-size: 20px; line-height: 1; }
     .cart-hist-btn:active { background: rgba(181,69,42,.12); }
     .cart-close { width: 40px; height: 40px; }
+    /* ===== 주문 출발 애니메이션 (황금마차 배송) ===== */
+    #shipFx { position: fixed; inset: 0; z-index: 10000; overflow: hidden; touch-action: none; cursor: pointer;
+      background: linear-gradient(180deg, #ffcf8a 0%, #ffe3b3 38%, #fff1d8 58%, #f3d29c 58.2%, #e9bf7e 100%);
+      animation: fxIn .25s ease-out both; -webkit-user-select: none; user-select: none; }
+    #shipFx.out { animation: fxOut .35s ease-in both; }
+    @keyframes fxIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fxOut { to { opacity: 0; } }
+    #shipFx .fx-sun { position: absolute; left: 70%; top: 25%; width: 22vmin; height: 22vmin; border-radius: 50%;
+      background: radial-gradient(circle, #fff6d6 0 38%, #ffd36b 39% 62%, rgba(255,190,90,0) 63%); animation: fxSun 6s ease-in-out infinite alternate; }
+    @keyframes fxSun { to { transform: translateY(-1.5vmin) scale(1.04); } }
+    #shipFx .fx-hills { position: absolute; left: 0; width: 200%; display: flex; animation: fxScroll linear infinite; }
+    #shipFx .fx-hills svg { width: 50%; height: 100%; flex: none; display: block; }
+    #shipFx .fx-far { bottom: 41.5%; height: 18%; animation-duration: 9s; opacity: .9; }
+    #shipFx .fx-near { bottom: 41.5%; height: 11%; animation-duration: 4.5s; }
+    @keyframes fxScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    #shipFx .fx-road { position: absolute; left: 0; right: 0; bottom: 18%; height: 5px; opacity: .55;
+      background: repeating-linear-gradient(90deg, #fff7e6 0 34px, transparent 34px 70px); background-size: 70px 4px; animation: fxRoad .35s linear infinite; }
+    @keyframes fxRoad { to { background-position: -70px 0; } }
+    #shipFx .fx-cart { position: absolute; left: 50%; bottom: 21%; width: min(58vw, 290px); margin-left: calc(min(58vw, 290px) / -2);
+      animation: fxDrive 2.8s cubic-bezier(.4,0,.2,1) both; }
+    @keyframes fxDrive {
+      0% { transform: translateX(-80vw); }
+      24% { transform: translateX(0); }
+      68% { transform: translateX(2vw); }
+      74% { transform: translateX(-3vw) ; }
+      100% { transform: translateX(110vw); } }
+    #shipFx .fx-bob { animation: fxBob .26s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+    @keyframes fxBob { from { transform: translateY(0) rotate(-1deg); } to { transform: translateY(-5%) rotate(1.2deg); } }
+    #shipFx .fx-tilt { animation: fxTilt 2.8s ease-in-out both; transform-origin: 30% 100%; }
+    @keyframes fxTilt { 0%, 66% { transform: rotate(0); } 74% { transform: rotate(5deg); } 82%, 100% { transform: rotate(-7deg); } }
+    #shipFx .fx-cart svg { width: 100%; height: auto; display: block; overflow: visible; }
+    #shipFx .fx-wheel { transform-box: fill-box; transform-origin: center; animation: fxSpin .32s linear infinite; }
+    @keyframes fxSpin { to { transform: rotate(360deg); } }
+    #shipFx .fx-puff { position: absolute; bottom: 2%; width: 13%; aspect-ratio: 1; border-radius: 50%; background: #fff3dc; opacity: 0;
+      animation: fxPuff .6s ease-out infinite; }
+    #shipFx .fx-puff:nth-of-type(2) { animation-delay: .2s; bottom: 6%; }
+    #shipFx .fx-puff:nth-of-type(3) { animation-delay: .4s; }
+    @keyframes fxPuff { 0% { transform: translateX(0) scale(.4); opacity: .9; } 100% { transform: translateX(-130%) scale(1.3); opacity: 0; } }
+    #shipFx .fx-speed { position: absolute; right: 100%; top: 30%; width: 70%; height: 50%; opacity: 0; animation: fxSpeed 2.8s linear both; }
+    #shipFx .fx-speed i { display: block; height: 5px; border-radius: 3px; background: #fff; margin: 14% 0 0 auto; }
+    #shipFx .fx-speed i:nth-child(1) { width: 70%; } #shipFx .fx-speed i:nth-child(2) { width: 100%; } #shipFx .fx-speed i:nth-child(3) { width: 55%; }
+    @keyframes fxSpeed { 0%, 72% { opacity: 0; } 78%, 100% { opacity: .9; } }
+    #shipFx .fx-leaf { position: absolute; top: -6%; width: 5vmin; height: 5vmin; animation: fxLeaf linear both; }
+    @keyframes fxLeaf { from { transform: translate(0, 0) rotate(0); } to { transform: translate(-75vw, 115vh) rotate(var(--r, 540deg)); } }
+    #shipFx .fx-title { position: absolute; left: 0; right: 0; top: 12%; text-align: center; color: #7a3416; font-weight: 800;
+      font-size: clamp(24px, 7.5vw, 40px); letter-spacing: -0.02em; text-shadow: 0 2px 0 rgba(255,255,255,.7); animation: fxTitle 2.8s ease both; }
+    #shipFx .fx-title small { display: block; margin-top: 6px; font-size: clamp(14px, 4vw, 18px); font-weight: 600; color: #9a5326; }
+    @keyframes fxTitle { 0% { opacity: 0; transform: translateY(-14px) scale(.9); } 12%, 70% { opacity: 1; transform: none; } 85%, 100% { opacity: 0; transform: translateY(-10px); } }
+    #shipFx .fx-done { position: absolute; left: 50%; top: 46%; width: min(82vw, 340px); transform: translate(-50%, -50%) scale(.6); opacity: 0;
+      background: rgba(255, 250, 240, .96); border-radius: 24px; padding: 26px 22px 20px; text-align: center; color: #3a2618;
+      box-shadow: 0 18px 50px rgba(120, 60, 20, .28); animation: fxDone .45s cubic-bezier(.2,1.4,.4,1) 2.75s both; }
+    @keyframes fxDone { to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+    #shipFx .fx-done svg { width: 76px; height: 76px; display: block; margin: 0 auto 10px; }
+    #shipFx .fx-done .ring { stroke-dasharray: 220; stroke-dashoffset: 220; animation: fxDraw .5s ease-out 2.95s forwards; }
+    #shipFx .fx-done .tick { stroke-dasharray: 60; stroke-dashoffset: 60; animation: fxDraw .35s ease-out 3.35s forwards; }
+    @keyframes fxDraw { to { stroke-dashoffset: 0; } }
+    #shipFx .fx-done b { display: block; font-size: 22px; font-weight: 800; color: #b5452a; }
+    #shipFx .fx-done p { margin: 6px 0 0; font-size: 15px; color: #5a3a24; font-variant-numeric: tabular-nums; }
+    #shipFx .fx-done .fx-hint { margin-top: 14px; font-size: 12px; color: #9a7a5e; }
+    #shipFx .fx-sound { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 12px); right: 12px; width: 44px; height: 44px; border-radius: 50%;
+      border: none; background: rgba(255,255,255,.7); color: #7a3416; font-size: 20px; cursor: pointer; z-index: 2; }
+    @media (prefers-reduced-motion: reduce) {
+      #shipFx .fx-cart, #shipFx .fx-bob, #shipFx .fx-tilt, #shipFx .fx-wheel, #shipFx .fx-hills, #shipFx .fx-road,
+      #shipFx .fx-puff, #shipFx .fx-speed, #shipFx .fx-leaf, #shipFx .fx-sun { animation: none !important; }
+      #shipFx .fx-cart, #shipFx .fx-leaf, #shipFx .fx-puff, #shipFx .fx-speed { display: none; }
+      #shipFx .fx-title { animation: none; opacity: 0; }
+      #shipFx .fx-done { animation-delay: .1s; }
+      #shipFx .fx-done .ring, #shipFx .fx-done .tick { animation-delay: .3s; }
+    }
   </style>
 </head>
 <body>
@@ -1539,7 +1608,6 @@
 
         <section class="order-info" id="orderInfo">
           <h3 class="order-info-title">주문 정보</h3>
-          <div class="receiver-info" id="receiverInfo">받는 사람: </div>
           <div class="form-group">
             <label class="form-label" for="ordererName">주문자 이름</label>
             <input type="text" class="form-input" id="ordererName" placeholder="이름">
@@ -1602,7 +1670,7 @@
     // ========== CONFIG ==========
     let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
     let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
-    const APP_VERSION = 'v2.9';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_VERSION = 'v3.0';      // 화면 아래 모퉁이에 표시되는 버전
     const APP_BUILD = '2026-10-07';
 
     // ---- 소주·맥주 박스 주문 규칙 (직접 고쳐 쓰는 표) ----
@@ -1724,7 +1792,6 @@
         const data = await decryptFile('data/p.bin');
         ORDER_PHONE = (data.config && data.config.phone) || '';
         ORDER_NAME = (data.config && data.config.name) || '';
-        document.getElementById('receiverInfo').textContent = '받는 사람: ' + ORDER_NAME;
         // 텔레그램 봇 설정(있으면 웹 화면에서 바로 전송)
         try {
           const tg = await decryptFile('data/tg.bin');
@@ -2975,6 +3042,153 @@
     let lastOrderUndo = null;
     function goSms(url) { location.href = url; }
 
+    // ---------- 주문 출발 애니메이션 + 효과음 (Web Audio 로 직접 합성, 외부 파일 없음) ----------
+    const FX_SOUND_KEY = 'hm_sound';
+    let fxCtx = null, fxMaster = null, fxTimer = null;
+    function fxSoundOn() { try { return localStorage.getItem(FX_SOUND_KEY) !== 'off'; } catch (_) { return true; } }
+    // 버튼을 누른 순간(사용자 동작 안)에 오디오를 깨워 둬야 모바일에서 소리가 나요
+    function fxAudioPrime() {
+      if (!fxSoundOn()) return;
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        if (!fxCtx) {
+          fxCtx = new AC();
+          fxMaster = fxCtx.createGain(); fxMaster.gain.value = 0.55; fxMaster.connect(fxCtx.destination);
+        }
+        if (fxCtx.state === 'suspended') fxCtx.resume();
+        const b = fxCtx.createBuffer(1, 1, 22050), src = fxCtx.createBufferSource();
+        src.buffer = b; src.connect(fxCtx.destination); src.start(0);
+      } catch (_) { fxCtx = null; }
+    }
+    function fxNoise(sec) {
+      const len = Math.max(1, Math.floor(fxCtx.sampleRate * sec));
+      const buf = fxCtx.createBuffer(1, len, fxCtx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      return buf;
+    }
+    function fxTone(t, f, dur, type, vol, f2) {
+      const o = fxCtx.createOscillator(), g = fxCtx.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t);
+      if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(fxMaster); o.start(t); o.stop(t + dur + 0.05);
+    }
+    function fxNoiseHit(t, dur, freq, q, vol, freq2) {
+      const s = fxCtx.createBufferSource(), f = fxCtx.createBiquadFilter(), g = fxCtx.createGain();
+      s.buffer = fxNoise(dur); f.type = 'bandpass'; f.Q.value = q;
+      f.frequency.setValueAtTime(freq, t);
+      if (freq2) f.frequency.exponentialRampToValueAtTime(freq2, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + Math.min(0.02, dur / 3));
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(f); f.connect(g); g.connect(fxMaster); s.start(t); s.stop(t + dur + 0.05);
+    }
+    function fxPlaySound() {
+      if (!fxCtx || !fxSoundOn()) return;
+      if (fxCtx.state === 'suspended') fxCtx.resume();
+      fxMaster.gain.value = 0.55;
+      const t0 = fxCtx.currentTime + 0.05;
+      // 빵빵! 출발 경적
+      [0, 0.17].forEach(d => { fxTone(t0 + d, 523, 0.13, 'square', 0.12); fxTone(t0 + d, 659, 0.13, 'square', 0.08); });
+      // 따각따각 바퀴 소리 (0.4s~2.0s)
+      for (let t = 0.4, i = 0; t < 2.0; t += 0.13, i++) fxNoiseHit(t0 + t, 0.045, i % 2 ? 1500 : 2300, 6, 0.32);
+      // 딸랑 방울
+      [0.55, 1.25].forEach(d => { fxTone(t0 + d, 2637, 0.35, 'sine', 0.07); fxTone(t0 + d + 0.05, 3520, 0.3, 'sine', 0.05); fxTone(t0 + d + 0.1, 3136, 0.3, 'sine', 0.05); });
+      // 슈웅~ 질주
+      fxNoiseHit(t0 + 1.95, 0.7, 350, 1.4, 0.45, 2600);
+      // 딩동댕 도착
+      [1046.5, 1318.5, 1568, 2093].forEach((f, i) => fxTone(t0 + 2.8 + i * 0.11, f, 0.7, 'triangle', 0.16));
+    }
+    const FX_LEAF_COLORS = ['#d9592a', '#e88a2e', '#c8462a', '#e0a83a', '#b5452a'];
+    const FX_CART_SVG = `<svg viewBox="0 0 130 124" aria-hidden="true">
+      <defs><linearGradient id="fxGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd86b"/><stop offset="1" stop-color="#f0a92e"/></linearGradient>
+      <linearGradient id="fxRoof" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c8462a"/><stop offset="1" stop-color="#e2672f"/></linearGradient></defs>
+      <g transform="translate(5,4)">
+        <rect x="56" y="10" width="34" height="26" rx="4" fill="#d8a26a" stroke="#8a5a2c" stroke-width="2.5" transform="rotate(-6 73 23)"/>
+        <path d="M58 22 L90 18 M74 11 L75 35" stroke="#c8462a" stroke-width="4" transform="rotate(-6 73 23)"/>
+        <path d="M70 9 q-6 -8 2 -7 q4 1 2 7 q2 -6 6 -7 q8 -1 2 7" fill="none" stroke="#c8462a" stroke-width="2.5" stroke-linecap="round" transform="rotate(-6 73 23)"/>
+        <path d="M36 14c3 6 9 8 14 7-2 5-1 9 3 13-6 1-10 4-12 9l-5-6-5 6c-2-5-6-8-12-9 4-4 5-8 3-13 5 1 11-1 14-7z" fill="#d9592a" transform="translate(4,4) scale(.8)"/>
+        <path d="M18 40 Q60 22 102 40 L102 46 L18 46 Z" fill="url(#fxRoof)"/>
+        <path d="M18 46 q7 9 14 0 q7 9 14 0 q7 9 14 0 q7 9 14 0 q7 9 14 0 q7 9 14 0" fill="#fff4e2" stroke="#c8462a" stroke-width="2.5" stroke-linejoin="round"/>
+        <rect x="20" y="54" width="80" height="42" rx="16" fill="url(#fxGold)" stroke="#b9741c" stroke-width="3"/>
+        <circle cx="50" cy="73" r="5" fill="#3a2618"/><circle cx="78" cy="73" r="5" fill="#3a2618"/>
+        <circle cx="51.6" cy="71.4" r="1.6" fill="#fff"/><circle cx="79.6" cy="71.4" r="1.6" fill="#fff"/>
+        <ellipse cx="40" cy="82" rx="6" ry="3.6" fill="#f08a6a" opacity=".75"/><ellipse cx="88" cy="82" rx="6" ry="3.6" fill="#f08a6a" opacity=".75"/>
+        <path d="M56 79 q8 9 16 0" fill="#7a2a14" stroke="#3a2618" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M20 66 h-8 a4 4 0 0 0 0 8 h8" fill="none" stroke="#b9741c" stroke-width="4" stroke-linecap="round"/>
+        <g class="fx-wheel"><circle cx="38" cy="100" r="12" fill="#6b3d22"/><path d="M38 89 V111 M27 100 H49 M30 92 L46 108 M46 92 L30 108" stroke="#a8673a" stroke-width="2.4"/><circle cx="38" cy="100" r="4.5" fill="#ffd86b"/></g>
+        <g class="fx-wheel"><circle cx="82" cy="100" r="12" fill="#6b3d22"/><path d="M82 89 V111 M71 100 H93 M74 92 L90 108 M90 92 L74 108" stroke="#a8673a" stroke-width="2.4"/><circle cx="82" cy="100" r="4.5" fill="#ffd86b"/></g>
+      </g></svg>`;
+    function fxHills(color, peaks) {
+      // 이어 붙여도 끊기지 않는 언덕 (양 끝 높이가 같아요)
+      let d = 'M0 100 L0 60';
+      peaks.forEach(([x, y]) => { d += ` Q${x - 8} ${y} ${x} ${y} T${x + 12} 60`; });
+      d += ' L100 60 L100 100 Z';
+      const one = `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${d}" fill="${color}"/></svg>`;
+      return one + one;
+    }
+    function closeShipFx() {
+      const el = document.getElementById('shipFx');
+      if (!el || el.classList.contains('out')) return;
+      clearTimeout(fxTimer);
+      el.classList.add('out');
+      setTimeout(() => el.remove(), 360);
+      document.removeEventListener('keydown', fxKey);
+    }
+    function fxKey(e) { if (e.key === 'Escape' || e.key === 'Enter') closeShipFx(); }
+    function playShipFx(info) {
+      const old = document.getElementById('shipFx'); if (old) old.remove();
+      const el = document.createElement('div');
+      el.id = 'shipFx';
+      el.setAttribute('role', 'alertdialog');
+      el.setAttribute('aria-label', '주문 전달 완료');
+      let leaves = '';
+      for (let i = 0; i < 12; i++) {
+        const c = FX_LEAF_COLORS[i % FX_LEAF_COLORS.length];
+        leaves += `<svg class="fx-leaf" viewBox="0 0 20 20" style="left:${30 + Math.random() * 80}%;animation-duration:${2.2 + Math.random() * 1.8}s;animation-delay:${(Math.random() * 1.6).toFixed(2)}s;--r:${300 + Math.floor(Math.random() * 500)}deg"><path d="M10 1c2 4 6 5 9 4-1 3-1 6 2 8-4 1-6 3-7 6l-4-4-4 4c-1-3-3-5-7-6 3-2 3-5 2-8 3 1 7 0 9-4z" fill="${c}"/></svg>`;
+      }
+      const who = info.name ? escapeHtml(info.name) + '에게 ' : '';
+      el.innerHTML = `
+        <div class="fx-sun"></div>
+        <div class="fx-hills fx-far">${fxHills('#e7b77a', [[20, 22], [55, 8], [85, 26]])}</div>
+        <div class="fx-hills fx-near">${fxHills('#d99a55', [[30, 18], [72, 30]])}</div>
+        <div class="fx-road"></div>
+        ${leaves}
+        <div class="fx-title">황금마차 출발!<small>${who}주문을 싣고 달려가요</small></div>
+        <div class="fx-cart"><div class="fx-tilt"><div class="fx-bob">
+          <div class="fx-speed"><i></i><i></i><i></i></div>
+          ${FX_CART_SVG}
+          <span class="fx-puff" style="left:6%"></span><span class="fx-puff" style="left:2%"></span><span class="fx-puff" style="left:10%"></span>
+        </div></div></div>
+        <div class="fx-done">
+          <svg viewBox="0 0 80 80"><circle class="ring" cx="40" cy="40" r="34" fill="none" stroke="#d8a23a" stroke-width="6" stroke-linecap="round" transform="rotate(-90 40 40)"/>
+          <path class="tick" d="M24 41 l11 11 l21 -23" fill="none" stroke="#b5452a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <b>주문 전달 완료</b>
+          <p>${who}${info.kinds}종 · ${escapeHtml(info.qty)} · ${info.total.toLocaleString('ko-KR')}원</p>
+          ${info.note ? `<p class="fx-hint" style="color:#b5452a">${escapeHtml(info.note)}</p>` : ''}
+          <p class="fx-hint">화면을 누르면 닫혀요</p>
+        </div>
+        <button type="button" class="fx-sound" aria-label="효과음 켜기/끄기">${fxSoundOn() ? '🔊' : '🔇'}</button>`;
+      el.addEventListener('click', closeShipFx);
+      el.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+      const sb = el.querySelector('.fx-sound');
+      sb.addEventListener('click', e => {
+        e.stopPropagation();
+        const on = !fxSoundOn();
+        try { localStorage.setItem(FX_SOUND_KEY, on ? 'on' : 'off'); } catch (_) {}
+        sb.textContent = on ? '🔊' : '🔇';
+        if (fxMaster) fxMaster.gain.value = on ? 0.55 : 0;
+        if (on && !fxCtx) fxAudioPrime();
+      });
+      document.body.appendChild(el);
+      document.addEventListener('keydown', fxKey);
+      fxPlaySound();
+      fxTimer = setTimeout(closeShipFx, 6500);
+    }
+
     // ---------- 텔레그램 전송 (data/tg.bin 이 있을 때) ----------
     let TG = null, sendBusy = false;
     function sendVerb() { return TG ? '주문' : '문자로 주문'; }
@@ -3008,6 +3222,7 @@
       const viaTg = !!TG && !opts.sms;
       if (viaTg) {
         const btn = document.getElementById('sendBtn');
+        fxAudioPrime();   // 버튼을 누른 순간 소리를 미리 깨워 둬요
         sendBusy = true; btn.disabled = true; btn.textContent = '보내는 중…';
         try {
           await tgSend(text);
@@ -3060,7 +3275,9 @@
 
       if (viaTg) {
         lastOrderUndo = null;
-        showToast((ORDER_NAME ? ORDER_NAME + '에게 ' : '') + '주문을 보냈어요' + (saved ? ' · 주문 내역에 저장' : ''), { duration: 3500 });
+        const qp = qtyParts(lines);
+        playShipFx({ name: ORDER_NAME, kinds: lines.length, qty: qtyText(qp.ea, qp.box), total: rec.totalPrice,
+          note: saved ? '' : '주문 내역은 저장하지 못했어요' });
       } else if (saved) {
         showToast('주문 내역에 저장했어요', { action: '되돌리기', duration: 5000, onAction: undoLastOrder });
       } else {
