@@ -1670,7 +1670,7 @@
     // ========== CONFIG ==========
     let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
     let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
-    const APP_VERSION = 'v3.1';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_VERSION = 'v3.2';      // 화면 아래 모퉁이에 표시되는 버전
     const APP_BUILD = '2026-10-07';
 
     // ---- 소주·맥주 박스 주문 규칙 (직접 고쳐 쓰는 표) ----
@@ -2708,12 +2708,15 @@
     // ---------- 비교 사이트 아이콘 (각 사이트 파비콘) ----------
     function searchIconsHtml(item) {
       const q = encodeURIComponent(item.q + (item.s && /\d/.test(item.s) ? ' ' + item.s : ''));
-      const sites = [];
+      // 순서: 쿠팡 → 네이버 → G마켓 (화장품·헤어바디는 올리브영을 끝에 추가)
+      const sites = [
+        { domain: 'coupang.com', url: 'https://www.coupang.com/np/search?q=' + q, label: '쿠팡에서 찾기', letter: 'C' },
+        { domain: 'naver.com', url: 'https://search.shopping.naver.com/search/all?query=' + q, label: '네이버쇼핑에서 찾기', letter: 'N' },
+        { domain: 'gmarket.co.kr', url: 'https://browse.gmarket.co.kr/search?keyword=' + q, label: 'G마켓에서 찾기', letter: 'G' }
+      ];
       if (item.c === '화장품·뷰티' || item.c === '헤어·바디') {
         sites.push({ domain: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr/store/search/getSearchMain.do?query=' + q, label: '올리브영에서 찾기', letter: 'O' });
       }
-      sites.push({ domain: 'naver.com', url: 'https://search.shopping.naver.com/search/all?query=' + q, label: '네이버쇼핑에서 찾기', letter: 'N' });
-      sites.push({ domain: 'gmarket.co.kr', url: 'https://browse.gmarket.co.kr/search?keyword=' + q, label: 'G마켓에서 찾기', letter: 'G' });
       return sites.map(s =>
         `<a class="search-icon" href="${s.url}" target="_blank" rel="noopener" aria-label="${s.label}" title="${s.label}">` +
         `<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=64" alt="" loading="lazy" width="20" height="20" ` +
