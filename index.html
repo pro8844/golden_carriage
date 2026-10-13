@@ -1371,6 +1371,8 @@
     .cart-summary-sub { margin: -4px 0 8px; text-align: right; font-size: 11.5px; color: var(--color-text-secondary); }
     .cart-summary-sub[hidden] { display: none; }
     .btn-send { white-space: nowrap; }
+    .btn-sms-alt { display: block; margin: 10px auto 0; padding: 8px 12px; min-height: 40px; background: none; border: none; color: var(--color-text-secondary); font: inherit; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .btn-sms-alt[hidden] { display: none; }
     .cart-note { margin-top: 10px; font-size: 12px; color: var(--color-text-secondary); }
     .cart-note[hidden] { display: none; }
     .btn-send { min-height: 48px; }
@@ -1378,7 +1380,8 @@
     /* 토스트(되돌리기) */
     .toast { max-width: calc(100% - 32px); text-align: center; }
     .toast.has-action { display: flex; align-items: center; gap: 12px; padding: 4px 6px 4px 16px; font-size: 13px; }
-    .toast .toast-act { min-height: 40px; padding: 0 12px; border: none; background: transparent; color: var(--color-mustard); font-weight: 700; font-size: 13px; cursor: pointer; border-radius: 8px; }
+    .toast.has-action span { flex: 1; white-space: nowrap; }
+    .toast .toast-act { white-space: nowrap; flex: none; min-height: 40px; padding: 0 12px; border: none; background: transparent; color: var(--color-mustard); font-weight: 700; font-size: 13px; cursor: pointer; border-radius: 8px; }
 
     /* 주문 내역 */
     .hist-note { font-size: 11.5px; color: var(--color-text-secondary); padding: 8px 0 4px; }
@@ -1551,6 +1554,7 @@
           <button class="btn-clear" onclick="showClearConfirm()">장바구니 비우기</button>
           <button class="btn-copy" onclick="copyOrder()">주문 내용 복사</button>
         </div>
+        <button type="button" class="btn-sms-alt" id="smsAltBtn" onclick="sendOrder({ sms: true })" hidden>문자 앱으로 보내기</button>
        </div>
       </div>
 
@@ -1598,7 +1602,7 @@
     // ========== CONFIG ==========
     let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
     let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
-    const APP_VERSION = 'v2.8';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_VERSION = 'v2.9';      // 화면 아래 모퉁이에 표시되는 버전
     const APP_BUILD = '2026-10-07';
 
     // ---- 소주·맥주 박스 주문 규칙 (직접 고쳐 쓰는 표) ----
@@ -1721,6 +1725,12 @@
         ORDER_PHONE = (data.config && data.config.phone) || '';
         ORDER_NAME = (data.config && data.config.name) || '';
         document.getElementById('receiverInfo').textContent = '받는 사람: ' + ORDER_NAME;
+        // 텔레그램 봇 설정(있으면 웹 화면에서 바로 전송)
+        try {
+          const tg = await decryptFile('data/tg.bin');
+          if (tg && tg.token && tg.chat) TG = { token: tg.token, chats: [].concat(tg.chat).map(String) };
+        } catch (_) { TG = null; }
+        applySendMode();
         // 담배는 제외
         allProducts = (data.items || []).filter(i => i.c !== '담배');
         DATA_CATS = data.cats || [];
@@ -2807,8 +2817,8 @@
 
       // Send button
       const sendBtn = document.getElementById('sendBtn');
-      sendBtn.disabled = sel.length === 0;
-      sendBtn.textContent = sel.length > 0 ? `문자로 주문 · ${qtyStr} · ${totalPrice.toLocaleString('ko-KR')}원` : '문자로 주문 보내기';
+      sendBtn.disabled = sel.length === 0 || sendBusy;
+      if (!sendBusy) sendBtn.textContent = sel.length > 0 ? `${sendVerb()} · ${qtyStr} · ${totalPrice.toLocaleString('ko-KR')}원` : sendVerb() + ' 보내기';
       if (scrollEl) scrollEl.scrollTop = prevTop;
     }
 
@@ -2965,11 +2975,51 @@
     let lastOrderUndo = null;
     function goSms(url) { location.href = url; }
 
-    function sendOrder() {
+    // ---------- 텔레그램 전송 (data/tg.bin 이 있을 때) ----------
+    let TG = null, sendBusy = false;
+    function sendVerb() { return TG ? '주문' : '문자로 주문'; }
+    function applySendMode() {
+      const alt = document.getElementById('smsAltBtn');
+      if (alt) alt.hidden = !(TG && ORDER_PHONE);
+      try { updateCartBar(); renderCartSheet(); } catch (_) {}
+    }
+    async function tgSend(text) {
+      for (const chat of TG.chats) {
+        const ctl = new AbortController();
+        const t = setTimeout(() => ctl.abort(), 12000);
+        try {
+          const r = await fetch('https://api.telegram.org/bot' + TG.token + '/sendMessage', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chat, text: text, disable_web_page_preview: true }),
+            signal: ctl.signal
+          });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok || !j.ok) throw new Error(j.description || ('HTTP ' + r.status));
+        } finally { clearTimeout(t); }
+      }
+    }
+
+    async function sendOrder(opts) {
+      opts = opts || {};
       const lines = cartLines().filter(l => l.checked);
-      if (lines.length === 0) return;
+      if (lines.length === 0 || sendBusy) return;
 
       const text = buildOrderText(lines);
+      const viaTg = !!TG && !opts.sms;
+      if (viaTg) {
+        const btn = document.getElementById('sendBtn');
+        sendBusy = true; btn.disabled = true; btn.textContent = '보내는 중…';
+        try {
+          await tgSend(text);
+        } catch (err) {
+          console.error('telegram send failed', err);
+          sendBusy = false; renderCartSheet();
+          if (ORDER_PHONE) showToast('전송에 실패했어요', { action: '문자로 보내기', duration: 6000, onAction: () => sendOrder({ sms: true }) });
+          else showToast('전송에 실패했어요. 잠시 후 다시 시도해 주세요', { duration: 3500 });
+          return;
+        }
+        sendBusy = false;
+      }
       const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
       const separator = isIOS ? '&' : '?';
       const smsUrl = 'sms:' + ORDER_PHONE + separator + 'body=' + encodeURIComponent(text);
@@ -2994,8 +3044,8 @@
       orders.unshift(rec);
       const saved = saveToStorage('hm_orders', orders.slice(0, 200));
 
-      // 2) 문자 앱 열기
-      goSms(smsUrl);
+      // 2) 문자 앱 열기 (텔레그램으로 보냈으면 그대로 화면 유지)
+      if (!viaTg) goSms(smsUrl);
       // 문자 앱으로 넘어간 뒤 장바구니를 닫고(history 항목도 정리), 잠시 뒤 항목을 되돌려요
       closeCart(400);
 
@@ -3008,7 +3058,10 @@
       lastOrderUndo = { orderId: rec.id, lines: removed };
       afterCartBulkChange();
 
-      if (saved) {
+      if (viaTg) {
+        lastOrderUndo = null;
+        showToast((ORDER_NAME ? ORDER_NAME + '에게 ' : '') + '주문을 보냈어요' + (saved ? ' · 주문 내역에 저장' : ''), { duration: 3500 });
+      } else if (saved) {
         showToast('주문 내역에 저장했어요', { action: '되돌리기', duration: 5000, onAction: undoLastOrder });
       } else {
         showToast('주문 내역을 저장하지 못했어요', { duration: 3000 });
