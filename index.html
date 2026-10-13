@@ -1670,7 +1670,7 @@
     // ========== CONFIG ==========
     let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
     let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
-    const APP_VERSION = 'v3.0';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_VERSION = 'v3.1';      // 화면 아래 모퉁이에 표시되는 버전
     const APP_BUILD = '2026-10-07';
 
     // ---- 소주·맥주 박스 주문 규칙 (직접 고쳐 쓰는 표) ----
@@ -1887,8 +1887,12 @@
       updateCatBtn();
     }
 
+    // 분류 선택 창은 가나다순 ('기타'는 맨 끝)
+    function catsSorted() {
+      return [...allCategories].sort((a, b) => (a === '기타') - (b === '기타') || a.localeCompare(b, 'ko'));
+    }
     function updateCatBtn() {
-      const sel = allCategories.filter(c => selectedCats.has(c));
+      const sel = catsSorted().filter(c => selectedCats.has(c));
       const label = sel.length === 0 ? '전체 분류' : sel.length === 1 ? sel[0] : `${sel[0]} 외 ${sel.length - 1}`;
       document.getElementById('catBtnLabel').textContent = label;
       const badge = document.getElementById('catBtnBadge');
@@ -3519,8 +3523,8 @@
     function openCatSheet() {
       draftCats = new Set(selectedCats);
       catBase = allProducts.filter(passesBase);
-      document.getElementById('catInner').innerHTML = allCategories.map((c, i) =>
-        `<label class="cat-row"><input type="checkbox" data-i="${i}" ${draftCats.has(c) ? 'checked' : ''}>` +
+      document.getElementById('catInner').innerHTML = catsSorted().map(c =>
+        `<label class="cat-row"><input type="checkbox" data-c="${escapeHtml(c)}" ${draftCats.has(c) ? 'checked' : ''}>` +
         `<span class="cat-name">${escapeHtml(c)} <span class="cat-count">(${catCounts[c] || 0})</span></span></label>`
       ).join('');
       updateCatApply();
@@ -3556,7 +3560,7 @@
     function onCatChange(e) {
       const t = e.target;
       if (!t || t.type !== 'checkbox') return;
-      const c = allCategories[Number(t.dataset.i)];
+      const c = t.dataset.c;
       if (t.checked) draftCats.add(c); else draftCats.delete(c);
       updateCatApply();
     }
