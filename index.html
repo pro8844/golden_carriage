@@ -1351,6 +1351,7 @@
 
     /* 비교 사이트 아이콘 */
     .search-links { display: flex; gap: 6px; align-items: center; }
+    .cart-cmp { margin-top: 6px; }
     .search-icon { width: 28px; height: 28px; flex: none; border-radius: 50%; border: 1px solid var(--color-border); background: #fff; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; overflow: hidden; }
     .search-icon img { width: 20px; height: 20px; display: block; }
     .search-icon .si-fb { display: none; font-size: 12px; font-weight: 700; color: var(--color-olive); line-height: 1; }
@@ -1672,7 +1673,7 @@
     // ========== CONFIG ==========
     let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
     let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
-    const APP_VERSION = 'v3.4';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_VERSION = 'v3.6';      // 화면 아래 모퉁이에 표시되는 버전
     const APP_BUILD = '2026-10-07';
 
     // ---- 소주·맥주 박스 주문 규칙 (직접 고쳐 쓰는 표) ----
@@ -1744,7 +1745,8 @@
     let cart = {};            // {id: 수량}  (boxMode[id] 가 true 면 박스 수)
     let boxMode = {};         // {id: true}  박스 단위로 담은 상품
     let cartUnchecked = new Set();   // 장바구니에서 체크 해제한 상품 id
-    let selectedCats = new Set();    // 비어 있으면 전체 분류
+    let catsAll = true;              // 전체 분류 선택 상태
+    let selectedCats = new Set();    // catsAll 이 false 일 때 고른 분류 (비어 있으면 상품 없음)
     let itemById = new Map();
     let ordererName = '';
     let orderMemo = '';
@@ -1824,8 +1826,16 @@
       Object.keys(boxMode).forEach(id => { if (!cart[id] || !boxMode[id] || !boxInfo(itemById.get(id))) delete boxMode[id]; });
       const unc = getFromStorage('hm_cart_unchecked', []);
       cartUnchecked = new Set((Array.isArray(unc) ? unc : []).filter(id => cart[id]));
-      const savedCats = getFromStorage('hm_cats', []);
-      selectedCats = new Set((Array.isArray(savedCats) ? savedCats : []).filter(c => allCategories.includes(c)));
+      const savedCats = getFromStorage('hm_cats2', null);
+      if (savedCats && typeof savedCats === 'object' && !Array.isArray(savedCats)) {
+        catsAll = savedCats.all !== false;
+        selectedCats = new Set((Array.isArray(savedCats.list) ? savedCats.list : []).filter(c => allCategories.includes(c)));
+      } else {
+        // 예전 저장 방식: 빈 목록 = 전체
+        const old = getFromStorage('hm_cats', []);
+        selectedCats = new Set((Array.isArray(old) ? old : []).filter(c => allCategories.includes(c)));
+        catsAll = selectedCats.size === 0;
+      }
 
       // Build category button
       buildCategoryChips();
@@ -1894,13 +1904,13 @@
       return [...allCategories].sort((a, b) => (a === '기타') - (b === '기타') || a.localeCompare(b, 'ko'));
     }
     function updateCatBtn() {
-      const sel = catsSorted().filter(c => selectedCats.has(c));
-      const label = sel.length === 0 ? '전체 분류' : sel.length === 1 ? sel[0] : `${sel[0]} 외 ${sel.length - 1}`;
+      const sel = catsAll ? [] : catsSorted().filter(c => selectedCats.has(c));
+      const label = catsAll ? '전체 분류' : sel.length === 0 ? '선택 안 함' : sel.length === 1 ? sel[0] : `${sel[0]} 외 ${sel.length - 1}`;
       document.getElementById('catBtnLabel').textContent = label;
       const badge = document.getElementById('catBtnBadge');
       badge.textContent = sel.length;
       badge.classList.toggle('show', sel.length > 0);
-      document.getElementById('catBtn').classList.toggle('has-sel', sel.length > 0);
+      document.getElementById('catBtn').classList.toggle('has-sel', !catsAll);
     }
 
     // Normalize string for search: NFC, lowercase, remove whitespace/punctuation
@@ -2176,7 +2186,7 @@
       filteredProducts = allProducts.filter(item => {
         if (!passesBase(item)) return false;
         // Category filter (비어 있으면 전체, '장바구니 담은 것'에서는 분류 무시)
-        return currentFilter === 'cart' || selectedCats.size === 0 || selectedCats.has(item.c);
+        return currentFilter === 'cart' || catsAll || selectedCats.has(item.c);
       });
 
       // Sort
@@ -2302,7 +2312,8 @@
 
       // Result count
       const count = filteredProducts.length;
-      document.getElementById('resultCount').textContent = count > 0 ? `${count}개 상품` : '검색 결과 없음';
+      document.getElementById('resultCount').textContent = count > 0 ? `${count}개 상품`
+        : (currentFilter !== 'cart' && !catsAll && selectedCats.size === 0) ? '선택한 분류가 없어요 · 분류에서 골라 주세요' : '검색 결과 없음';
 
       // Load more button
       const moreBtn = document.getElementById('loadMoreBtn');
@@ -2484,7 +2495,7 @@
     const BOX_SOJU_RE = /참이슬|처음처럼|진로|좋은데이|새로|청풍|잎새주|선양|참소주|시원|대선|한라산|소주/;
     const BOX_BEER_RE = /카스|테라|하이트|켈리|클라우드|아사히|하이네켄|삿포로|에비스|코젤|칭따오|버드와이저|호가든|기네스|맥주|라거|필스너|크롬바커/;
     const boxCache = new Map();
-    const RAMEN_PACK_SIZE = 6;   // 봉지 라면 묶음 크기
+    const RAMEN_PACK_SIZE = 5;   // 봉지 라면 묶음 크기 (대부분 5개입)
     const RAMEN_CUP_RE = /컵|사발|용기|범벅|도시락|왕뚜껑/;
     // 박스 주문이 가능한 상품이면 {size, label}, 아니면 null (예상치)
     function boxInfo(item) {
@@ -2719,19 +2730,32 @@
     overlayHiders.cart = hideCart;
 
     // ---------- 비교 사이트 아이콘 (각 사이트 파비콘) ----------
+    // 안드로이드: 앱이 깔려 있으면 앱에서 바로 검색, 없으면 웹으로 (intent 의 fallback)
+    // 아이폰: 쿠팡은 웹 링크가 앱으로 연결돼요(유니버설 링크). 나머지는 웹으로 열어요.
+    const IS_ANDROID = /Android/i.test(navigator.userAgent);
+    function androidIntent(webUrl, pkg) {
+      const u = new URL(webUrl);
+      return `intent://${u.host}${u.pathname}${u.search}#Intent;scheme=https;package=${pkg};S.browser_fallback_url=${encodeURIComponent(webUrl)};end`;
+    }
+    function naverAppIntent(webUrl) {
+      return `intent://inappbrowser?url=${encodeURIComponent(webUrl)}&target=new&version=6#Intent;scheme=naversearchapp;package=com.nhn.android.search;S.browser_fallback_url=${encodeURIComponent(webUrl)};end`;
+    }
     function searchIconsHtml(item) {
       const q = encodeURIComponent(item.q + (item.s && /\d/.test(item.s) ? ' ' + item.s : ''));
       // 순서: 쿠팡 → 네이버 → G마켓 (화장품·헤어바디는 올리브영을 끝에 추가)
+      const cp = 'https://www.coupang.com/np/search?q=' + q;
+      const nv = 'https://msearch.shopping.naver.com/search/all?query=' + q;
+      const gm = 'https://browse.gmarket.co.kr/search?keyword=' + q;
       const sites = [
-        { domain: 'coupang.com', url: 'https://www.coupang.com/np/search?q=' + q, label: '쿠팡에서 찾기', letter: 'C' },
-        { domain: 'naver.com', url: 'https://search.shopping.naver.com/search/all?query=' + q, label: '네이버쇼핑에서 찾기', letter: 'N' },
-        { domain: 'gmarket.co.kr', url: 'https://browse.gmarket.co.kr/search?keyword=' + q, label: 'G마켓에서 찾기', letter: 'G' }
+        { domain: 'coupang.com', url: cp, app: IS_ANDROID ? androidIntent(cp, 'com.coupang.mobile') : '', label: '쿠팡에서 찾기', letter: 'C' },
+        { domain: 'naver.com', url: nv, app: IS_ANDROID ? naverAppIntent(nv) : '', label: '네이버쇼핑에서 찾기', letter: 'N' },
+        { domain: 'gmarket.co.kr', url: gm, app: IS_ANDROID ? androidIntent(gm, 'com.ebay.kr.gmarket') : '', label: 'G마켓에서 찾기', letter: 'G' }
       ];
       if (item.c === '화장품·뷰티' || item.c === '헤어·바디') {
-        sites.push({ domain: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr/store/search/getSearchMain.do?query=' + q, label: '올리브영에서 찾기', letter: 'O' });
+        sites.push({ domain: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr/store/search/getSearchMain.do?query=' + q, app: '', label: '올리브영에서 찾기', letter: 'O' });
       }
       return sites.map(s =>
-        `<a class="search-icon" href="${s.url}" target="_blank" rel="noopener" aria-label="${s.label}" title="${s.label}">` +
+        `<a class="search-icon" href="${escapeHtml(s.app || s.url)}"${s.app ? '' : ' target="_blank"'} rel="noopener" aria-label="${s.label}" title="${s.label}" onclick="event.stopPropagation()">` +
         `<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=64" alt="" loading="lazy" width="20" height="20" ` +
         `onerror="this.style.display='none';this.parentNode.classList.add('fail')">` +
         `<span class="si-fb" aria-hidden="true">${s.letter}</span></a>`
@@ -2866,6 +2890,7 @@
                   <div class="cart-item-name">${escapeHtml(item.n)}</div>
                   <div class="cart-item-spec">${escapeHtml(item.s)}</div>
                   <div class="cart-item-price">${item.p.toLocaleString('ko-KR')}원</div>
+                  <div class="search-links cart-cmp">${searchIconsHtml(item)}</div>
                 </div>
                 <button class="remove-btn" onclick="removeFromCart('${id}')" aria-label="삭제">×</button>
               </div>
@@ -3539,7 +3564,7 @@
     let catBase = [];
     function openCatSheet() {
       // 선택 없음 = 전체 → 창에서는 모두 체크된 상태로 보여요
-      draftCats = new Set(selectedCats.size === 0 ? allCategories : selectedCats);
+      draftCats = new Set(catsAll ? allCategories : selectedCats);
       catBase = allProducts.filter(passesBase);
       document.getElementById('catInner').innerHTML =
         `<label class="cat-row cat-all"><input type="checkbox" id="catAll"><span class="cat-name">전체 선택 <span class="cat-count">(${allProducts.length})</span></span></label>` +
@@ -3556,11 +3581,14 @@
     // 창을 어떻게 닫든(✕, 바깥 터치, Esc, 뒤로가기, 적용) 체크 상태를 그대로 적용
     function commitDraftCats() {
       // 모두 체크했거나 하나도 없으면 '전체'(빈 집합)로 저장해요
-      if (draftCats.size === 0 || allCategories.every(c => draftCats.has(c))) draftCats = new Set();
-      const same = draftCats.size === selectedCats.size && [...draftCats].every(c => selectedCats.has(c));
+      // 모두 체크 = 전체, 하나도 없으면 상품을 보여주지 않아요
+      const newAll = allCategories.every(c => draftCats.has(c));
+      const same = newAll ? catsAll
+        : (!catsAll && draftCats.size === selectedCats.size && [...draftCats].every(c => selectedCats.has(c)));
       if (same) return false;
-      selectedCats = new Set(draftCats);
-      saveToStorage('hm_cats', [...selectedCats]);
+      catsAll = newAll;
+      selectedCats = newAll ? new Set() : new Set(draftCats);
+      saveToStorage('hm_cats2', { all: catsAll, list: [...selectedCats] });
       updateCatBtn();
       return true;
     }
@@ -3597,8 +3625,8 @@
         all.checked = allCategories.every(c => draftCats.has(c));
         all.indeterminate = !all.checked && draftCats.size > 0;
       }
-      const n = catBase.filter(i => draftCats.size === 0 || draftCats.has(i.c)).length;
-      document.getElementById('catApplyBtn').textContent = draftCats.size === 0 ? `적용 (전체 ${n}개 상품)` : `적용 (${n}개 상품)`;
+      const n = catBase.filter(i => draftCats.has(i.c)).length;
+      document.getElementById('catApplyBtn').textContent = `적용 (${n}개 상품)`;
     }
     function clearDraftCats() {
       draftCats.clear();
