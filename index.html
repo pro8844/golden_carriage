@@ -1398,6 +1398,8 @@
     .hist-total { font-weight: 700; color: var(--color-maple); font-variant-numeric: tabular-nums; }
     .hist-memo { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; word-break: break-word; }
     .hist-items { margin-top: 6px; }
+    .hist-items summary.sel-sum { cursor: default; color: var(--color-maple); list-style: none; }
+    .hist-items summary.sel-sum::-webkit-details-marker { display: none; }
     .hist-items summary { cursor: pointer; font-size: 13px; color: var(--color-burnt-orange); font-weight: 600; min-height: 32px; display: flex; align-items: center; }
     .hist-items ul { list-style: none; margin: 4px 0 0; padding: 0; }
     .hist-items li { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 0; border-top: 1px solid var(--color-border); font-size: 12.5px; }
@@ -1673,7 +1675,7 @@
     // ========== CONFIG ==========
     let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
     let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
-    const APP_VERSION = 'v3.6';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_VERSION = 'v3.7';      // 화면 아래 모퉁이에 표시되는 버전
     const APP_BUILD = '2026-10-07';
 
     // ---- 소주·맥주 박스 주문 규칙 (직접 고쳐 쓰는 표) ----
@@ -3448,7 +3450,7 @@
           </div>
           ${o.name ? `<div class="hist-memo">주문자: ${escapeHtml(o.name)}</div>` : ''}
           ${o.memo ? `<div class="hist-memo">메모: ${escapeHtml(o.memo)}</div>` : ''}
-          <details class="hist-items" data-oid="${oid}"${openIds.has(String(oid)) ? ' open' : ''}><summary>상품 목록 보기</summary>${allRow}<ul>${lis}</ul></details>
+          <details class="hist-items" data-oid="${oid}"${openIds.has(String(oid)) ? ' open' : ''}><summary${selMode ? ' class="sel-sum" onclick="event.preventDefault()"' : ''}>${selMode ? '삭제할 상품을 고르세요' : '상품 목록 보기'}</summary>${allRow}<ul>${lis}</ul></details>
           <div class="hist-btns">${btns}</div>
         </div>`;
       });
@@ -3479,11 +3481,22 @@
       if (del) { del.disabled = n === 0; del.textContent = `선택 삭제 (${n})`; }
     }
 
+    // 삭제를 누르면 그 주문의 상품이 모두 체크된 채로 선택 모드가 돼요 (빼고 싶은 것만 해제)
     function startHistSelect(orderId) {
-      histSel = { id: Number(orderId), idx: new Set() };
+      const orders = getFromStorage('hm_orders', []);
+      const o = Array.isArray(orders) ? orders.find(x => Number(x.id) === Number(orderId)) : null;
+      const n = o && Array.isArray(o.items) ? o.items.length : 0;
+      histSel = { id: Number(orderId), idx: new Set(Array.from({ length: n }, (_, i) => i)) };
       renderHistory();
       const card = document.querySelector(`#historyBody .hist-card[data-oid="${histSel.id}"]`);
-      if (card && card.scrollIntoView) card.scrollIntoView({ block: 'nearest' });
+      const btns = card && card.querySelector('.hist-btns');
+      if (btns && btns.scrollIntoView) btns.scrollIntoView({ block: 'nearest' });
+    }
+    // 확인창을 닫은 직후의 터치가 아래 목록에 잘못 눌리지 않게 잠깐 막아요
+    function guardHistTaps() {
+      const body = document.getElementById('historyBody');
+      body.style.pointerEvents = 'none';
+      setTimeout(() => { body.style.pointerEvents = ''; }, 400);
     }
     function cancelHistSelect() {
       histSel = null;
@@ -3556,6 +3569,8 @@
         }
         histSel = null;
         renderHistory();
+        guardHistTaps();
+        showToast('삭제했어요');
       }, '삭제');
     }
 
