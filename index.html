@@ -1390,7 +1390,9 @@
     /* 주문 내역 */
     .hist-note { font-size: 11.5px; color: var(--color-text-secondary); padding: 8px 0 4px; }
     .hist-empty { text-align: center; color: var(--color-text-secondary); padding: 40px 12px; font-size: 14px; }
-    .hist-day { margin: 14px 0 8px; font-size: 14px; font-weight: 700; color: var(--color-fg); border-bottom: 2px dashed var(--color-border); padding-bottom: 4px; }
+    .hist-day { margin: 14px 0 8px; font-size: 14px; font-weight: 700; color: var(--color-fg); border-bottom: 2px dashed var(--color-border); padding-bottom: 4px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .hist-day small { font-weight: 500; color: var(--color-text-secondary); font-size: 12px; margin-left: 2px; }
+    .hist-day-del { flex: none; min-height: 32px; padding: 0 10px; border-radius: 8px; border: 1.5px solid var(--color-border); background: var(--color-card); color: var(--color-maple); font-size: 12px; font-weight: 600; cursor: pointer; }
     .hist-card { border: 1px solid var(--color-border); border-left: 4px solid var(--color-maple); border-radius: 14px; background: var(--color-card); padding: 10px 12px; margin-bottom: 10px; }
     .hist-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
     .hist-time { font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
@@ -1675,7 +1677,7 @@
     // ========== CONFIG ==========
     let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
     let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
-    const APP_VERSION = 'v3.7';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_VERSION = 'v3.9';      // 화면 아래 모퉁이에 표시되는 버전
     const APP_BUILD = '2026-10-07';
 
     // ---- 소주·맥주 박스 주문 규칙 (직접 고쳐 쓰는 표) ----
@@ -3405,13 +3407,17 @@
         return;
       }
       let lastDay = null;
+      const dayCount = {};
+      orders.forEach(o => { const d = new Date(o.at); if (!isNaN(d.getTime())) { const k = histDayKey(d); dayCount[k] = (dayCount[k] || 0) + 1; } });
       orders.forEach(o => {
         const d = new Date(o.at);
         if (isNaN(d.getTime())) return;
         const day = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} (${WEEKDAYS[d.getDay()]})`;
         if (day !== lastDay) {
           lastDay = day;
-          html += `<div class="hist-day">${day}</div>`;
+          const k = histDayKey(d);
+          html += `<div class="hist-day"><span>${day} <small>${dayCount[k]}건</small></span>` +
+            `<button type="button" class="hist-day-del" onclick="askDeleteDay('${k}', '${day}')">이 날짜 전체 삭제</button></div>`;
         }
         const items = Array.isArray(o.items) ? o.items : [];
         const oid = Number(o.id);
@@ -3439,8 +3445,8 @@
         const allRow = selMode
           ? `<label class="hi-all"><input type="checkbox" class="hi-allchk" onchange="toggleHistAll(this.checked)"><span>전체 선택</span><span class="hi-cnt">${nSel}개 선택</span></label>` : '';
         const btns = selMode
-          ? `<button type="button" class="hb-delsel" onclick="askDeleteSelected(${oid})" ${nSel === 0 ? 'disabled' : ''}>선택 삭제 (${nSel})</button>
-            <button type="button" class="hb-cancel" onclick="cancelHistSelect()">취소</button>`
+          ? `<button type="button" class="hb-cancel" onclick="cancelHistSelect()">취소</button>
+            <button type="button" class="hb-delsel" onclick="askDeleteSelected(${oid})" ${nSel === 0 ? 'disabled' : ''}>선택 삭제 (${nSel})</button>`
           : `<button type="button" class="hb-redo" onclick="reorderFromHistory(${oid})">다시 담기</button>
             <button type="button" class="hb-del" onclick="startHistSelect(${oid})">삭제</button>`;
         html += `<div class="hist-card" data-oid="${oid}">
@@ -3482,15 +3488,44 @@
     }
 
     // 삭제를 누르면 그 주문의 상품이 모두 체크된 채로 선택 모드가 돼요 (빼고 싶은 것만 해제)
+    function histDayKey(d) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+    // 날짜별 전체 삭제
+    function askDeleteDay(key, label) {
+      let orders = getFromStorage('hm_orders', []);
+      if (!Array.isArray(orders)) return;
+      const inDay = o => { const d = new Date(o.at); return !isNaN(d.getTime()) && histDayKey(d) === key; };
+      const n = orders.filter(inDay).length;
+      if (n === 0) return;
+      showConfirm(`${label} 주문 ${n}건을 모두 삭제할까요?`, () => {
+        let list = getFromStorage('hm_orders', []);
+        if (!Array.isArray(list)) list = [];
+        const removedIds = new Set(list.filter(inDay).map(o => o.id));
+        list = list.filter(o => !inDay(o));
+        saveToStorage('hm_orders', list);
+        if (histSel && removedIds.has(histSel.id)) histSel = null;
+        if (lastOrderUndo && removedIds.has(lastOrderUndo.orderId)) lastOrderUndo = null;
+        renderHistory();
+        guardHistTaps();
+        showToast(`${n}건을 삭제했어요`);
+      }, '삭제');
+    }
     function startHistSelect(orderId) {
       const orders = getFromStorage('hm_orders', []);
       const o = Array.isArray(orders) ? orders.find(x => Number(x.id) === Number(orderId)) : null;
       const n = o && Array.isArray(o.items) ? o.items.length : 0;
+      // 누른 '삭제' 버튼의 화면 위치를 기억했다가, 목록이 펼쳐진 뒤에도 '선택 삭제'가 같은 자리에 오도록 맞춰요
+      const body = document.getElementById('historyBody');
+      const oldBtn = document.querySelector(`#historyBody .hist-card[data-oid="${Number(orderId)}"] .hb-del`);
+      const oldTop = oldBtn ? oldBtn.getBoundingClientRect().top : null;
       histSel = { id: Number(orderId), idx: new Set(Array.from({ length: n }, (_, i) => i)) };
       renderHistory();
-      const card = document.querySelector(`#historyBody .hist-card[data-oid="${histSel.id}"]`);
-      const btns = card && card.querySelector('.hist-btns');
-      if (btns && btns.scrollIntoView) btns.scrollIntoView({ block: 'nearest' });
+      const newBtn = document.querySelector(`#historyBody .hist-card[data-oid="${histSel.id}"] .hb-delsel`);
+      if (newBtn && oldTop != null) {
+        body.scrollTop += newBtn.getBoundingClientRect().top - oldTop;
+        // 맨 아래라서 더 내릴 수 없으면 버튼이 보이게만 해요
+        const r = newBtn.getBoundingClientRect(), br = body.getBoundingClientRect();
+        if (r.bottom > br.bottom || r.top < br.top) newBtn.scrollIntoView({ block: 'nearest' });
+      }
     }
     // 확인창을 닫은 직후의 터치가 아래 목록에 잘못 눌리지 않게 잠깐 막아요
     function guardHistTaps() {
