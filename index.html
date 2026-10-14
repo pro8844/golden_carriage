@@ -1331,6 +1331,9 @@
     .sheet-foot { flex: none; display: flex; gap: 8px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--color-border); background: var(--color-bg); }
     .sheet-foot button { min-height: 46px; padding: 0 14px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--color-border); background: var(--color-card); color: var(--color-fg); }
     .sheet-foot .btn-primary { flex: 1; border: none; color: #fff; background: linear-gradient(135deg, var(--color-maple) 0%, var(--color-burnt-orange) 100%); box-shadow: 0 2px 8px rgba(181,69,42,.2); }
+    #catRow[hidden] { display: none; }
+    .cat-row.cat-all { border-bottom: 2px solid var(--color-border); }
+    .cat-row.cat-all .cat-name { font-weight: 700; }
     .cat-row { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 6px 2px; border-bottom: 1px solid var(--color-border); cursor: pointer; }
     .cat-row input { flex: none; width: 22px; height: 22px; margin: 0; accent-color: var(--color-maple); }
     .cat-row .cat-name { flex: 1; font-size: 15px; font-weight: 500; }
@@ -1536,7 +1539,7 @@
         <button class="chip" data-filter="new">2026 신규</button>
         <button class="chip" data-filter="cart">장바구니 담은 것</button>
       </div>
-      <div class="sort-row">
+      <div class="sort-row" id="catRow">
         <label>분류:</label>
         <button type="button" class="cat-btn" id="catBtn" onclick="openCatSheet()" aria-haspopup="dialog">
           <span class="cat-btn-label" id="catBtnLabel">전체 분류</span>
@@ -1604,7 +1607,7 @@
             <span id="cartSummaryTotal">0원</span>
           </div>
         </div>
-        <div class="cart-note" id="cartBoxNote" hidden>박스 수량·가격은 예상치예요. 매장 기준과 다를 수 있어요.</div>
+        <div class="cart-note" id="cartBoxNote" hidden>박스·묶음 수량과 가격은 예상치예요. 매장 기준과 다를 수 있어요.</div>
 
         <section class="order-info" id="orderInfo">
           <h3 class="order-info-title">주문 정보</h3>
@@ -1640,7 +1643,6 @@
       </div>
       <div class="sheet-body" id="catList"><div class="elastic-in" id="catInner"></div></div>
       <div class="sheet-foot">
-        <button type="button" onclick="clearDraftCats()">전체 해제</button>
         <button type="button" class="btn-primary" id="catApplyBtn" onclick="applyCats()">적용</button>
       </div>
     </div>
@@ -1670,7 +1672,7 @@
     // ========== CONFIG ==========
     let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
     let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
-    const APP_VERSION = 'v3.2';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_VERSION = 'v3.4';      // 화면 아래 모퉁이에 표시되는 버전
     const APP_BUILD = '2026-10-07';
 
     // ---- 소주·맥주 박스 주문 규칙 (직접 고쳐 쓰는 표) ----
@@ -2145,6 +2147,7 @@
       document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
       e.target.classList.add('active');
       currentFilter = e.target.dataset.filter;
+      document.getElementById('catRow').hidden = currentFilter === 'cart';
       displayedCount = 0;
       applyFiltersAndSort({ keepTop: true });
     }
@@ -2172,8 +2175,8 @@
       // Filter
       filteredProducts = allProducts.filter(item => {
         if (!passesBase(item)) return false;
-        // Category filter (비어 있으면 전체)
-        return selectedCats.size === 0 || selectedCats.has(item.c);
+        // Category filter (비어 있으면 전체, '장바구니 담은 것'에서는 분류 무시)
+        return currentFilter === 'cart' || selectedCats.size === 0 || selectedCats.has(item.c);
       });
 
       // Sort
@@ -2262,7 +2265,7 @@
         if (item.new) badges.push('<span class="badge badge-new">신규</span>');
         if (item.out) badges.push('<span class="badge badge-out">영외</span>');
         const bi = boxInfo(item);
-        if (bi) badges.push('<span class="badge badge-box">박스 주문 가능</span>');
+        if (bi) badges.push(`<span class="badge badge-box">${bi.unit} 주문 가능</span>`);
 
         // Build meta line with optional category
         let metaLine = escapeHtml(item.v) + ' · ' + escapeHtml(item.s);
@@ -2481,6 +2484,8 @@
     const BOX_SOJU_RE = /참이슬|처음처럼|진로|좋은데이|새로|청풍|잎새주|선양|참소주|시원|대선|한라산|소주/;
     const BOX_BEER_RE = /카스|테라|하이트|켈리|클라우드|아사히|하이네켄|삿포로|에비스|코젤|칭따오|버드와이저|호가든|기네스|맥주|라거|필스너|크롬바커/;
     const boxCache = new Map();
+    const RAMEN_PACK_SIZE = 6;   // 봉지 라면 묶음 크기
+    const RAMEN_CUP_RE = /컵|사발|용기|범벅|도시락|왕뚜껑/;
     // 박스 주문이 가능한 상품이면 {size, label}, 아니면 null (예상치)
     function boxInfo(item) {
       if (!item) return null;
@@ -2502,10 +2507,15 @@
             } else if (typeof rule.ml === 'number') {
               if (ml !== rule.ml) continue;
             }
-            result = { size: rule.size, label: rule.label };
+            result = { size: rule.size, label: rule.label, unit: '박스' };
             break;
           }
         }
+      }
+      // 봉지 라면: 한 봉 가격으로 올라온 상품은 묶음(6봉) 단위로도 담을 수 있어요
+      if (!result && item.c === '라면·면류' && item.p < 1300 && !RAMEN_CUP_RE.test(item.n || '')) {
+        const g = (item.s || '').match(/^\s*(\d+(?:\.\d+)?)\s*g\s*$/i);
+        if (g && +g[1] >= 108 && +g[1] <= 160) result = { size: RAMEN_PACK_SIZE, label: '봉', unit: '묶음' };
       }
       boxCache.set(item.id, result);
       return result;
@@ -2515,7 +2525,7 @@
     function unitCount(id) { return isBox(id) ? boxInfo(itemById.get(id)).size : 1; }
     function qtyLabel(id) {
       const q = cart[id] || 0;
-      return isBox(id) && q > 0 ? q + '박스' : String(q);
+      return isBox(id) && q > 0 ? q + boxInfo(itemById.get(id)).unit : String(q);
     }
     function boxEstText(id) {
       const item = itemById.get(id);
@@ -2523,7 +2533,7 @@
       if (!bi) return '';
       const q = cart[id] || 0;
       if (q > 0) return `= ${q * bi.size}${bi.label} · ${(q * bi.size * item.p).toLocaleString('ko-KR')}원 (예상)`;
-      return `1박스 = ${bi.size}${bi.label} · ${(bi.size * item.p).toLocaleString('ko-KR')}원 (예상)`;
+      return `1${bi.unit} = ${bi.size}${bi.label} · ${(bi.size * item.p).toLocaleString('ko-KR')}원 (예상)`;
     }
     function unitToggleHtml(id) {
       const bi = boxInfo(itemById.get(id));
@@ -2531,7 +2541,7 @@
       const box = isBox(id);
       return `<div class="unit-toggle" role="group" aria-label="주문 단위">` +
         `<button type="button" class="unit-opt${box ? '' : ' on'}" data-box="0" aria-pressed="${!box}" onclick="setUnit('${id}', false)">낱개</button>` +
-        `<button type="button" class="unit-opt${box ? ' on' : ''}" data-box="1" aria-pressed="${box}" onclick="setUnit('${id}', true)">박스(${bi.size}${escapeHtml(bi.label)})</button>` +
+        `<button type="button" class="unit-opt${box ? ' on' : ''}" data-box="1" aria-pressed="${box}" onclick="setUnit('${id}', true)">${bi.unit}(${bi.size}${escapeHtml(bi.label)})</button>` +
         `</div>`;
     }
     function setUnit(id, box) {
@@ -2559,6 +2569,7 @@
         out.push({
           id, item, qty, box, per,
           label: bi ? bi.label : '',
+          unitWord: box ? bi.unit : '',
           pieces: qty * per,
           total: item.p * qty * per,
           checked: !cartUnchecked.has(id)
@@ -2575,14 +2586,16 @@
 
     // 낱개/박스 단위별 수량 합계 (박스 안 병 수는 섞지 않아요)
     function qtyParts(lines) {
-      let ea = 0, box = 0;
-      lines.forEach(l => { if (l.box) box += l.qty; else ea += l.qty; });
-      return { ea, box };
+      let ea = 0, box = 0, pack = 0;
+      lines.forEach(l => { if (!l.box) ea += l.qty; else if (l.unitWord === '묶음') pack += l.qty; else box += l.qty; });
+      return { ea, box, pack };
     }
-    function qtyText(ea, box) {
+    function qpText(qp) { return qtyText(qp.ea, qp.box, qp.pack); }
+    function qtyText(ea, box, pack) {
       const parts = [];
       if (ea > 0) parts.push(ea + '개');
       if (box > 0) parts.push(box + '박스');
+      if (pack > 0) parts.push(pack + '묶음');
       return parts.length ? parts.join(' + ') : '0개';
     }
     // 박스 안 낱개 수 문구 (예: "40병"), 단위가 섞이면 "개"
@@ -2592,7 +2605,7 @@
       const keys = Object.keys(by);
       if (keys.length === 0) return '';
       if (keys.length === 1) return by[keys[0]] + keys[0];
-      return keys.reduce((a, k) => a + by[k], 0) + '개';
+      return keys.map(k => by[k] + k).join('·');
     }
 
     function refreshCard(id) {
@@ -2663,7 +2676,7 @@
       const fab = document.getElementById('floatingCartBtn');
       if (kinds > 0) {
         const qp = qtyParts(lines);
-        const tip = `장바구니 ${kinds}종 · ${qtyText(qp.ea, qp.box)}`;
+        const tip = `장바구니 ${kinds}종 · ${qpText(qp)}`;
         fab.title = tip; fab.setAttribute('aria-label', tip);
         badge.textContent = kinds > 99 ? '99+' : kinds;
         badge.classList.add('show');
@@ -2739,7 +2752,7 @@
       const badges = [];
       if (item.new) badges.push('<span class="badge badge-new">신규</span>');
       if (item.out) badges.push('<span class="badge badge-out">영외</span>');
-      if (boxInfo(item)) badges.push('<span class="badge badge-box">박스 주문 가능</span>');
+      if (boxInfo(item)) badges.push(`<span class="badge badge-box">${boxInfo(item).unit} 주문 가능</span>`);
       document.getElementById('zoomBadges').innerHTML = badges.join('');
 
       const metaLine = escapeHtml(item.v) + ' · ' + escapeHtml(item.s) + ' · ' + escapeHtml(item.c);
@@ -2836,7 +2849,7 @@
         all.checked = nChecked === lines.length;
         all.indeterminate = nChecked > 0 && nChecked < lines.length;
 
-        lines.forEach(({ id, item, qty, box, per, label, pieces, total, checked }) => {
+        lines.forEach(({ id, item, qty, box, per, label, unitWord, pieces, total, checked }) => {
           const div = document.createElement('div');
           div.className = 'cart-item' + (checked ? '' : ' off');
 
@@ -2860,7 +2873,7 @@
               ${boxInfo(item) ? unitToggleHtml(id) : ''}
               <div class="cart-item-qty">
                 <button class="qty-btn" style="width:28px;height:28px;font-size:14px;" onclick="updateQty('${id}', -1)" aria-label="빼기">−</button>
-                <div style="min-width:30px;text-align:center;font-weight:600;">${box ? qty + '박스' : qty}</div>
+                <div style="min-width:30px;text-align:center;font-weight:600;">${box ? qty + unitWord : qty}</div>
                 <button class="qty-btn" style="width:28px;height:28px;font-size:14px;" onclick="updateQty('${id}', 1)" aria-label="담기">+</button>
               </div>
               </div>
@@ -2880,12 +2893,13 @@
       // Summary (체크한 상품만)
       const sel = lines.filter(l => l.checked);
       const qp = qtyParts(sel);
-      const qtyStr = qtyText(qp.ea, qp.box);
+      const qtyStr = qpText(qp);
       const totalPrice = sel.reduce((a, l) => a + l.total, 0);
       document.getElementById('cartSummaryQty').textContent = qtyStr;
       const noteEl = document.getElementById('cartSummaryNote');
-      noteEl.hidden = qp.box === 0;
-      noteEl.textContent = qp.box > 0 ? `(박스 안 ${boxInnerText(sel)} 포함 · 예상)` : '';
+      const anyBox = qp.box > 0 || qp.pack > 0;
+      noteEl.hidden = !anyBox;
+      noteEl.textContent = anyBox ? `(${qp.box && qp.pack ? '박스·묶음' : qp.box ? '박스' : '묶음'} 안 ${boxInnerText(sel)} 포함 · 예상)` : '';
       document.getElementById('cartSummaryTotal').textContent = `${totalPrice.toLocaleString('ko-KR')}원`;
       document.getElementById('cartBoxNote').hidden = !lines.some(l => l.box);
 
@@ -2958,7 +2972,7 @@
     function lineText(l) {
       const base = `${l.item.n} ${l.item.s}`;
       return l.box
-        ? `${base} x${l.qty}박스(${l.pieces}${l.label}) = ${l.total.toLocaleString('ko-KR')}원`
+        ? `${base} x${l.qty}${l.unitWord}(${l.pieces}${l.label}) = ${l.total.toLocaleString('ko-KR')}원`
         : `${base} x${l.qty} = ${l.total.toLocaleString('ko-KR')}원`;
     }
 
@@ -2982,7 +2996,7 @@
       lines.forEach((l, i) => {
         text += `${i + 1}. ${lineText(l)}\n`;
       });
-      text += `----\n총 ${lines.length}종 · ${qtyText(qp.ea, qp.box)} / 합계 ${totalPrice.toLocaleString('ko-KR')}원`;
+      text += `----\n총 ${lines.length}종 · ${qpText(qp)} / 합계 ${totalPrice.toLocaleString('ko-KR')}원`;
       if (orderMemo.trim()) {
         text += `\n메모: ${orderMemo}`;
       }
@@ -3254,11 +3268,12 @@
         memo: orderMemo,
         items: lines.map(l => ({
           id: l.id, n: l.item.n, s: l.item.s, p: l.item.p, qty: l.qty,
-          unit: l.box ? 'box' : 'ea', boxSize: l.box ? l.per : 1, boxLabel: l.box ? l.label : ''
+          unit: l.box ? 'box' : 'ea', boxSize: l.box ? l.per : 1, boxLabel: l.box ? l.label : '', boxUnit: l.box ? l.unitWord : ''
         })),
         totalQty: lines.reduce((a, l) => a + l.pieces, 0),
         totalEa: qtyParts(lines).ea,
         totalBox: qtyParts(lines).box,
+        totalPack: qtyParts(lines).pack,
         totalPrice: lines.reduce((a, l) => a + l.total, 0)
       };
       let orders = getFromStorage('hm_orders', []);
@@ -3283,7 +3298,7 @@
       if (viaTg) {
         lastOrderUndo = null;
         const qp = qtyParts(lines);
-        playShipFx({ name: ORDER_NAME, kinds: lines.length, qty: qtyText(qp.ea, qp.box), total: rec.totalPrice,
+        playShipFx({ name: ORDER_NAME, kinds: lines.length, qty: qpText(qp), total: rec.totalPrice,
           note: saved ? '' : '주문 내역은 저장하지 못했어요' });
       } else if (saved) {
         showToast('주문 내역에 저장했어요', { action: '되돌리기', duration: 5000, onAction: undoLastOrder });
@@ -3378,7 +3393,7 @@
           const box = it.unit === 'box';
           const size = it.boxSize || 1;
           const qty = histItemQty(it);
-          const qtyTxt = box ? `${qtyText(0, qty)} (${qty * size}${escapeHtml(it.boxLabel || '개')})` : qtyText(qty, 0);
+          const qtyTxt = box ? `${qty}${escapeHtml(it.boxUnit || '박스')} (${qty * size}${escapeHtml(it.boxLabel || '개')})` : qtyText(qty, 0);
           const line = histItemLine(it);
           const prod = itemById.get(it.id);
           const thumb = prod
@@ -3391,9 +3406,8 @@
             `<span class="hi-name">${escapeHtml(it.n)}<small>${escapeHtml(it.s)}</small></span>` +
             `<span class="hi-price">${qtyTxt}<small>${line.toLocaleString('ko-KR')}원</small></span></li>`;
         }).join('');
-        let hEa = 0, hBox = 0;
-        if (Number.isFinite(o.totalEa) && Number.isFinite(o.totalBox)) { hEa = o.totalEa; hBox = o.totalBox; }
-        else items.forEach(it => { const q = parseInt(it.qty, 10) || 0; if (it.unit === 'box') hBox += q; else hEa += q; });
+        let hEa = 0, hBox = 0, hPack = 0;
+        items.forEach(it => { const q = histItemQty(it); if (it.unit !== 'box') hEa += q; else if (it.boxUnit === '묶음') hPack += q; else hBox += q; });
         const nSel = selMode ? histSel.idx.size : 0;
         const allRow = selMode
           ? `<label class="hi-all"><input type="checkbox" class="hi-allchk" onchange="toggleHistAll(this.checked)"><span>전체 선택</span><span class="hi-cnt">${nSel}개 선택</span></label>` : '';
@@ -3404,7 +3418,7 @@
             <button type="button" class="hb-del" onclick="startHistSelect(${oid})">삭제</button>`;
         html += `<div class="hist-card" data-oid="${oid}">
           <div class="hist-top">
-            <div><span class="hist-time">${pad2(d.getHours())}:${pad2(d.getMinutes())}</span><span class="hist-sum">${items.length}종 · ${qtyText(hEa, hBox)}</span></div>
+            <div><span class="hist-time">${pad2(d.getHours())}:${pad2(d.getMinutes())}</span><span class="hist-sum">${items.length}종 · ${qtyText(hEa, hBox, hPack)}</span></div>
             <div class="hist-total">${(o.totalPrice || 0).toLocaleString('ko-KR')}원</div>
           </div>
           ${o.name ? `<div class="hist-memo">주문자: ${escapeHtml(o.name)}</div>` : ''}
@@ -3524,9 +3538,12 @@
     let draftCats = new Set();
     let catBase = [];
     function openCatSheet() {
-      draftCats = new Set(selectedCats);
+      // 선택 없음 = 전체 → 창에서는 모두 체크된 상태로 보여요
+      draftCats = new Set(selectedCats.size === 0 ? allCategories : selectedCats);
       catBase = allProducts.filter(passesBase);
-      document.getElementById('catInner').innerHTML = catsSorted().map(c =>
+      document.getElementById('catInner').innerHTML =
+        `<label class="cat-row cat-all"><input type="checkbox" id="catAll"><span class="cat-name">전체 선택 <span class="cat-count">(${allProducts.length})</span></span></label>` +
+        catsSorted().map(c =>
         `<label class="cat-row"><input type="checkbox" data-c="${escapeHtml(c)}" ${draftCats.has(c) ? 'checked' : ''}>` +
         `<span class="cat-name">${escapeHtml(c)} <span class="cat-count">(${catCounts[c] || 0})</span></span></label>`
       ).join('');
@@ -3538,6 +3555,8 @@
     }
     // 창을 어떻게 닫든(✕, 바깥 터치, Esc, 뒤로가기, 적용) 체크 상태를 그대로 적용
     function commitDraftCats() {
+      // 모두 체크했거나 하나도 없으면 '전체'(빈 집합)로 저장해요
+      if (draftCats.size === 0 || allCategories.every(c => draftCats.has(c))) draftCats = new Set();
       const same = draftCats.size === selectedCats.size && [...draftCats].every(c => selectedCats.has(c));
       if (same) return false;
       selectedCats = new Set(draftCats);
@@ -3563,13 +3582,23 @@
     function onCatChange(e) {
       const t = e.target;
       if (!t || t.type !== 'checkbox') return;
-      const c = t.dataset.c;
-      if (t.checked) draftCats.add(c); else draftCats.delete(c);
+      if (t.id === 'catAll') {
+        draftCats = t.checked ? new Set(allCategories) : new Set();
+        document.querySelectorAll('#catList input[data-c]').forEach(cb => { cb.checked = t.checked; });
+      } else {
+        const c = t.dataset.c;
+        if (t.checked) draftCats.add(c); else draftCats.delete(c);
+      }
       updateCatApply();
     }
     function updateCatApply() {
+      const all = document.getElementById('catAll');
+      if (all) {
+        all.checked = allCategories.every(c => draftCats.has(c));
+        all.indeterminate = !all.checked && draftCats.size > 0;
+      }
       const n = catBase.filter(i => draftCats.size === 0 || draftCats.has(i.c)).length;
-      document.getElementById('catApplyBtn').textContent = `적용 (${n}개 상품)`;
+      document.getElementById('catApplyBtn').textContent = draftCats.size === 0 ? `적용 (전체 ${n}개 상품)` : `적용 (${n}개 상품)`;
     }
     function clearDraftCats() {
       draftCats.clear();
