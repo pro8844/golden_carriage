@@ -1,0 +1,32 @@
+name: 추천만 다시 만들기
+
+on:
+  workflow_dispatch: {}       # Actions 탭에서 'Run workflow'로 수동 실행 (상품 수집 없이 추천만)
+
+permissions:
+  contents: write
+
+jobs:
+  recommend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests pillow cryptography
+      - name: 이번 달 추천 만들기 (네이버 쇼핑 클릭량)
+        env:
+          HM_PW: ${{ secrets.HM_PW }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+        run: python tools/recommend.py
+      - name: 변경 사항 저장
+        run: |
+          git config user.name "golden-carriage-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then echo "변경 없음"; exit 0; fi
+          git commit -m "추천 업데이트 $(TZ=Asia/Seoul date +%Y-%m-%d)"
+          git push

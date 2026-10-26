@@ -1573,6 +1573,7 @@
     .rec-px { font-size: 15px; font-weight: 800; color: var(--color-maple); font-variant-numeric: tabular-nums; }
     .rec-on { font-size: 11.5px; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
     .rec-on s { text-decoration-thickness: 1px; }
+    .rec-save.rec-pop { background: var(--color-olive); }
     .rec-add { margin-top: 4px; min-height: 34px; border-radius: 10px; border: 1.5px solid var(--color-maple); background: transparent; color: var(--color-maple); font-weight: 700; font-size: 13px; cursor: pointer; }
     .rec-add.on { background: var(--color-maple); color: #fff; }
     .zoom-cmp { margin: 6px 0 2px; font-size: 13px; line-height: 1.5; color: var(--color-text-secondary); }
@@ -2821,20 +2822,33 @@
       }
     }
 
-    // ---------- 이번 달 추천 (data/rec.bin: 네이버쇼핑 최저가 + 쇼핑 클릭량) ----------
+    // ---------- 이번 달 추천 (data/rec.bin) ----------
+    // top: 네이버 쇼핑 클릭량 인기 상품, price: {id: [온라인가(군마트 용량 환산), 설명, 링크]} (쿠팡 수동 조사)
     let REC = null;
     async function loadRec() {
       try {
         const r = await decryptFile('data/rec.bin');
-        if (r && Array.isArray(r.top) && r.cmp) REC = r;
+        if (r && (Array.isArray(r.top) || r.price)) { r.top = r.top || []; r.price = r.price || {}; REC = r; }
       } catch (_) { REC = null; }
       renderRec();
     }
-    // [온라인 1개 값, 온라인 묶음 수, 판매처, 링크, 절약률(%), 군마트 묶음 수]
-    function recCmp(id) { return REC && REC.cmp && REC.cmp[id] || null; }
-    function recOnlineForPx(id) {
-      const c = recCmp(id); if (!c) return 0;
-      return Math.round(c[0] * (c[5] || 1));
+    function recPrice(id) { return REC && REC.price && REC.price[id] || null; }
+    function recSave(id) {   // 군마트가 싸면 절약률(%) , 아니면 0 이하
+      const pr = recPrice(id), it = itemById.get(id);
+      if (!pr || !it || !(pr[0] > 0)) return null;
+      return Math.round((1 - it.p / pr[0]) * 100);
+    }
+    function recLink(pr) {
+      if (!pr || !pr[2]) return '';
+      return /^https?:/.test(pr[2]) ? pr[2] : 'https://www.coupang.com' + pr[2];
+    }
+    function recIds() {
+      if (!REC) return [];
+      // 1) 온라인보다 5% 이상 싼 상품 (절약률 순)  2) 많이 찾는 인기 상품 (가격 미확인 포함, 온라인이 더 싼 것은 제외)
+      const deals = Object.keys(REC.price).filter(id => itemById.has(id) && recSave(id) >= 5)
+        .sort((x, y) => recSave(y) - recSave(x));
+      const pop = REC.top.filter(id => itemById.has(id) && !deals.includes(id) && !(recSave(id) !== null && recSave(id) < 5));
+      return deals.concat(pop).slice(0, 30);
     }
     function recBtnHtml(id) {
       const q = cart[id] || 0;
@@ -2849,36 +2863,37 @@
     function renderRec() {
       const box = document.getElementById('recBox');
       if (!box) return;
-      const ids = REC ? REC.top.filter(id => itemById.has(id) && recCmp(id)) : [];
+      const ids = recIds();
       if (!ids.length || currentFilter !== 'all' || searchQuery || !catsAll) { box.hidden = true; return; }
       box.hidden = false;
       const title = IS_HW ? '🎃 이번 달 추천' : '🍁 이번 달 추천';
-      box.innerHTML = `<div class="rec-head"><b>${title}</b><span>온라인 최저가보다 싼 인기 상품<br>${escapeHtml(REC.basis || '네이버쇼핑')} ${escapeHtml(REC.updated || '')} 기준</span></div>` +
+      const notes = [];
+      if (Object.keys(REC.price).length) notes.push(`가격: ${escapeHtml(REC.price_mall || '쿠팡')} ${escapeHtml(REC.price_date || '')} 조사`);
+      if (REC.top.length) notes.push(`인기: ${escapeHtml(REC.basis || '네이버 쇼핑 클릭량')} ${escapeHtml(REC.pop_date || '')}`);
+      box.innerHTML = `<div class="rec-head"><b>${title}</b><span>${notes.join('<br>')}</span></div>` +
         '<div class="rec-row">' + ids.map(id => {
-          const it = itemById.get(id), c = recCmp(id);
+          const it = itemById.get(id), pr = recPrice(id), sv = recSave(id);
+          const badge = sv !== null && sv >= 5 ? `<span class="rec-save">-${sv}%</span>` : '<span class="rec-save rec-pop">인기</span>';
+          const on = sv !== null && sv >= 5 ? `<div class="rec-on">쿠팡 <s>${pr[0].toLocaleString('ko-KR')}원</s></div>` : `<div class="rec-on">많이 찾는 상품</div>`;
           return `<div class="rec-card" role="button" tabindex="0" onclick="openZoom('${id}')">` +
-            `<div class="thumb-wrap rec-thumb" data-id="${id}" data-c="${escapeHtml(it.c)}"></div>` +
-            `<span class="rec-save">-${c[4]}%</span>` +
+            `<div class="thumb-wrap rec-thumb" data-id="${id}" data-c="${escapeHtml(it.c)}"></div>` + badge +
             `<div class="rec-name">${escapeHtml(it.n)}</div>` +
-            `<div class="rec-px">${it.p.toLocaleString('ko-KR')}원</div>` +
-            `<div class="rec-on">온라인 <s>${recOnlineForPx(id).toLocaleString('ko-KR')}원</s></div>` +
+            `<div class="rec-px">${it.p.toLocaleString('ko-KR')}원</div>` + on +
             `<button type="button" class="rec-add${(cart[id] || 0) > 0 ? ' on' : ''}" data-id="${id}" onclick="event.stopPropagation(); updateQty('${id}', 1)">${recBtnHtml(id)}</button>` +
             `</div>`;
         }).join('') + '</div>';
       fillThumbs();
     }
     function zoomCmpHtml(id) {
-      const c = recCmp(id);
-      if (!c) return '';
-      const on = recOnlineForPx(id);
-      const item = itemById.get(id);
-      const diff = on - item.p;
-      const mall = c[2] ? ` · ${escapeHtml(c[2])}` : '';
-      const link = c[3] ? ` <a href="${escapeHtml(c[3])}" target="_blank" rel="noopener">보기</a>` : '';
+      const pr = recPrice(id);
+      if (!pr) return '';
+      const it = itemById.get(id), on = pr[0], diff = on - it.p, sv = recSave(id);
+      const mall = escapeHtml(REC.price_mall || '쿠팡');
+      const link = recLink(pr) ? ` · <a href="${escapeHtml(recLink(pr))}" target="_blank" rel="noopener">${mall}에서 보기</a>` : '';
       const head = diff > 0
-        ? `온라인 최저 <s>${on.toLocaleString('ko-KR')}원</s> → 군마트가 <b>${diff.toLocaleString('ko-KR')}원(${c[4]}%) 저렴</b>`
-        : `온라인 최저 ${on.toLocaleString('ko-KR')}원 · 온라인이 비슷하거나 더 싸요`;
-      return `${head}<br><small>${escapeHtml(REC.basis || '네이버쇼핑')} ${escapeHtml(REC.updated || '')} 기준${mall} · 배송비 별도${c[1] > 1 ? ` · ${c[1]}개 묶음을 나눠 계산` : ''}${link}</small>`;
+        ? `${mall} 최저 <s>${on.toLocaleString('ko-KR')}원</s> → 군마트가 <b>${diff.toLocaleString('ko-KR')}원(${sv}%) 저렴</b>`
+        : `${mall} 최저 ${on.toLocaleString('ko-KR')}원 · <b>온라인 묶음 구매가 ${(-diff).toLocaleString('ko-KR')}원 더 싸요</b>`;
+      return `${head}<br><small>${escapeHtml(pr[1] || '')} · ${escapeHtml(REC.price_date || '')} 조사 · 쿠폰·배송 조건에 따라 달라요${link}</small>`;
     }
 
     function getThumbSrc(item) {
