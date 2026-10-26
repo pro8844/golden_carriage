@@ -1556,6 +1556,20 @@
     html.hw #shipFx .fx-title { color: #ffb76b; text-shadow: 0 2px 0 rgba(0,0,0,.5); }
     html.hw #shipFx .fx-title small { color: #f3e8ff; }
     html.hw #shipFx .fx-puff { background: #c9b6dc; }
+    html.hw #shipFx .fx-road { background: repeating-linear-gradient(90deg, #ffb347 0 34px, transparent 34px 70px); opacity: .45; }
+    html.hw #shipFx .fx-done { background: rgba(33, 20, 50, .96); color: #f3e8ff; border: 2px solid #ff7a1a; box-shadow: 0 0 0 4px rgba(255, 122, 26, .15), 0 18px 50px rgba(0, 0, 0, .45); }
+    html.hw #shipFx .fx-done b { color: #ffb347; }
+    html.hw #shipFx .fx-done p { color: #e6d6f5; }
+    html.hw #shipFx .fx-done .fx-hint { color: #b9a6cc; }
+    html.hw #shipFx .fx-done .fx-hw-sub { font-size: 13px; color: #ff9a3c; margin-top: 4px; }
+    html.hw #shipFx .fx-done .ring { stroke: #ff7a1a; }
+    html.hw #shipFx .fx-done .tick { stroke: #ffb347; }
+    html.hw #shipFx .fx-sound { background: rgba(255,255,255,.15); color: #ffb347; }
+    #shipFx .fx-bat { position: absolute; right: -14%; width: calc(14vmin * var(--s, 1)); height: calc(7vmin * var(--s, 1)); animation: fxBatFly linear both; }
+    #shipFx .fx-bat .fx-flap { transform-origin: 50% 50%; transform-box: fill-box; animation: fxFlap .18s ease-in-out infinite alternate; }
+    @keyframes fxBatFly { 0% { transform: translate(0, 0); } 25% { transform: translate(-30vw, -4vh); } 50% { transform: translate(-60vw, 3vh); } 75% { transform: translate(-90vw, -3vh); } 100% { transform: translate(-125vw, 2vh); } }
+    @keyframes fxFlap { from { transform: scaleY(1); } to { transform: scaleY(.35); } }
+    @media (prefers-reduced-motion: reduce) { #shipFx .fx-bat { display: none; } }
 
     /* ===== 이번 달 추천 (온라인 최저가 비교) ===== */
     .rec-box { margin: 4px 0 14px; }
@@ -1757,7 +1771,7 @@
     // ========== CONFIG ==========
     let ORDER_PHONE = '';   // 암호화된 데이터에서 불러옴
     let ORDER_NAME = '';    // 암호화된 데이터에서 불러옴
-    const APP_VERSION = 'v4.0';      // 화면 아래 모퉁이에 표시되는 버전
+    const APP_VERSION = 'v4.1';      // 화면 아래 모퉁이에 표시되는 버전
     const APP_BUILD = '2026-10-07';
 
     // ---- 소주·맥주 박스 주문 규칙 (직접 고쳐 쓰는 표) ----
@@ -3336,16 +3350,27 @@
       if (fxCtx.state === 'suspended') fxCtx.resume();
       fxMaster.gain.value = 0.55;
       const t0 = fxCtx.currentTime + 0.05;
-      // 빵빵! 출발 경적
-      [0, 0.17].forEach(d => { fxTone(t0 + d, 523, 0.13, 'square', 0.12); fxTone(t0 + d, 659, 0.13, 'square', 0.08); });
+      const hw = document.documentElement.classList.contains('hw');
+      if (hw) {
+        // 할로윈: 우~ 유령 소리 + 박쥐 날갯짓
+        const o = fxCtx.createOscillator(), g = fxCtx.createGain(), lfo = fxCtx.createOscillator(), lg = fxCtx.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(560, t0); o.frequency.exponentialRampToValueAtTime(330, t0 + 0.9);
+        lfo.frequency.value = 6; lg.gain.value = 18; lfo.connect(lg); lg.connect(o.frequency);
+        g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.18, t0 + 0.15); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.0);
+        o.connect(g); g.connect(fxMaster); o.start(t0); lfo.start(t0); o.stop(t0 + 1.05); lfo.stop(t0 + 1.05);
+        [0.9, 1.0, 1.5, 1.6].forEach(d => fxNoiseHit(t0 + d, 0.06, 900, 2, 0.12));
+      } else {
+        // 빵빵! 출발 경적
+        [0, 0.17].forEach(d => { fxTone(t0 + d, 523, 0.13, 'square', 0.12); fxTone(t0 + d, 659, 0.13, 'square', 0.08); });
+      }
       // 따각따각 바퀴 소리 (0.4s~2.0s)
       for (let t = 0.4, i = 0; t < 2.0; t += 0.13, i++) fxNoiseHit(t0 + t, 0.045, i % 2 ? 1500 : 2300, 6, 0.32);
       // 딸랑 방울
       [0.55, 1.25].forEach(d => { fxTone(t0 + d, 2637, 0.35, 'sine', 0.07); fxTone(t0 + d + 0.05, 3520, 0.3, 'sine', 0.05); fxTone(t0 + d + 0.1, 3136, 0.3, 'sine', 0.05); });
       // 슈웅~ 질주
       fxNoiseHit(t0 + 1.95, 0.7, 350, 1.4, 0.45, 2600);
-      // 딩동댕 도착
-      [1046.5, 1318.5, 1568, 2093].forEach((f, i) => fxTone(t0 + 2.8 + i * 0.11, f, 0.7, 'triangle', 0.16));
+      // 딩동댕 도착 (할로윈은 으스스한 단조)
+      (hw ? [880, 1046.5, 1318.5, 1760] : [1046.5, 1318.5, 1568, 2093]).forEach((f, i) => fxTone(t0 + 2.8 + i * 0.11, f, 0.7, 'triangle', 0.16));
     }
     const FX_LEAF_COLORS = document.documentElement.classList.contains('hw')
       ? ['#ff7a1a', '#ffb347', '#9b6bc9', '#ff9a3c', '#c9b6dc']
@@ -3369,6 +3394,20 @@
         <g class="fx-wheel"><circle cx="38" cy="100" r="12" fill="#6b3d22"/><path d="M38 89 V111 M27 100 H49 M30 92 L46 108 M46 92 L30 108" stroke="#a8673a" stroke-width="2.4"/><circle cx="38" cy="100" r="4.5" fill="#ffd86b"/></g>
         <g class="fx-wheel"><circle cx="82" cy="100" r="12" fill="#6b3d22"/><path d="M82 89 V111 M71 100 H93 M74 92 L90 108 M90 92 L74 108" stroke="#a8673a" stroke-width="2.4"/><circle cx="82" cy="100" r="4.5" fill="#ffd86b"/></g>
       </g></svg>`;
+    // 할로윈 마차: 선물상자 → 잭오랜턴, 단풍잎 → 마녀 모자, 차양 → 보라색
+    const FX_CART_SVG_HW = FX_CART_SVG
+      .replace(/<rect x="56" y="10"[^>]*\/>\s*<path d="M58 22[^>]*\/>\s*<path d="M70 9[^>]*\/>/,
+        '<g transform="translate(73 24)"><ellipse rx="18" ry="14.5" fill="#ff7a1a" stroke="#c4500c" stroke-width="2"/>' +
+        '<path d="M-7 -13 q7 -3 14 0 M0 -14.5 v28" fill="none" stroke="#c4500c" stroke-width="1.4"/>' +
+        '<path d="M0 -14 q1 -6 6 -8" stroke="#3f6b2a" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+        '<path d="M-11 -3 l4 -6 l4 6z M3 -3 l4 -6 l4 6z" fill="#3a1d05"/>' +
+        '<path d="M-11 3 q11 11 22 0 l-3 2.5 l-2.5 -2.5 l-3 3.5 l-2.5 -3.5 l-3 3.5 l-2.5 -3.5 l-3 2.5z" fill="#3a1d05"/></g>')
+      .replace(/<path d="M36 14c3 6[^>]*\/>/,
+        '<g transform="translate(22 6) rotate(-14)"><path d="M14 0 Q17 14 23 25 L4 25 Q10 14 14 0Z" fill="#2b1840" stroke="#7a4aa0" stroke-width="1.2"/>' +
+        '<ellipse cx="13.5" cy="26" rx="16" ry="4.2" fill="#2b1840" stroke="#7a4aa0" stroke-width="1"/><rect x="6" y="20" width="15" height="3.2" rx="1" fill="#ff7a1a"/></g>')
+      .replace('stop-color="#c8462a"/><stop offset="1" stop-color="#e2672f"', 'stop-color="#4b2a6b"/><stop offset="1" stop-color="#7a3fa0"')
+      .replace('fill="#fff4e2" stroke="#c8462a"', 'fill="#f3e8ff" stroke="#4b2a6b"');
+    const FX_BAT = '<path d="M20 9c-2-4-6-6-11-5 2 1 3 4 2 6-3-1-6 0-8 2 4 0 7 1 9 4 2-2 5-3 8-2 3-1 6 0 8 2 2-3 5-4 9-4-2-2-5-3-8-2-1-2 0-5 2-6-5-1-9 1-11 5z" fill="currentColor"/><circle cx="18" cy="9" r=".9" fill="#ffb347"/><circle cx="22" cy="9" r=".9" fill="#ffb347"/>';
     function fxHills(color, peaks) {
       // 이어 붙여도 끊기지 않는 언덕 (양 끝 높이가 같아요)
       let d = 'M0 100 L0 60';
@@ -3392,8 +3431,14 @@
       el.id = 'shipFx';
       el.setAttribute('role', 'alertdialog');
       el.setAttribute('aria-label', '주문 전달 완료');
+      const hw = document.documentElement.classList.contains('hw');
       let leaves = '';
-      for (let i = 0; i < 12; i++) {
+      if (hw) {
+        for (let i = 0; i < 9; i++) {
+          leaves += `<svg class="fx-bat" viewBox="0 0 40 20" style="top:${8 + Math.random() * 38}%;color:${i % 3 ? '#1b1026' : '#3b1d5c'};animation-duration:${2.4 + Math.random() * 1.6}s;animation-delay:${(Math.random() * 1.8).toFixed(2)}s;--s:${(0.7 + Math.random() * 0.8).toFixed(2)}"><g class="fx-flap">${FX_BAT}</g></svg>`;
+        }
+      }
+      for (let i = 0; i < (hw ? 6 : 12); i++) {
         const c = FX_LEAF_COLORS[i % FX_LEAF_COLORS.length];
         leaves += `<svg class="fx-leaf" viewBox="0 0 20 20" style="left:${30 + Math.random() * 80}%;animation-duration:${2.2 + Math.random() * 1.8}s;animation-delay:${(Math.random() * 1.6).toFixed(2)}s;--r:${300 + Math.floor(Math.random() * 500)}deg"><path d="M10 1c2 4 6 5 9 4-1 3-1 6 2 8-4 1-6 3-7 6l-4-4-4 4c-1-3-3-5-7-6 3-2 3-5 2-8 3 1 7 0 9-4z" fill="${c}"/></svg>`;
       }
@@ -3404,16 +3449,17 @@
         <div class="fx-hills fx-near">${fxHills('#d99a55', [[30, 18], [72, 30]])}</div>
         <div class="fx-road"></div>
         ${leaves}
-        <div class="fx-title">황금마차 출발!<small>${who}주문을 싣고 달려가요</small></div>
+        <div class="fx-title">${hw ? '🎃 황금마차 출발!' : '황금마차 출발!'}<small>${who}주문을 싣고 ${hw ? '달빛 아래 ' : ''}달려가요</small></div>
         <div class="fx-cart"><div class="fx-tilt"><div class="fx-bob">
           <div class="fx-speed"><i></i><i></i><i></i></div>
-          ${FX_CART_SVG}
+          ${hw ? FX_CART_SVG_HW : FX_CART_SVG}
           <span class="fx-puff" style="left:6%"></span><span class="fx-puff" style="left:2%"></span><span class="fx-puff" style="left:10%"></span>
         </div></div></div>
         <div class="fx-done">
           <svg viewBox="0 0 80 80"><circle class="ring" cx="40" cy="40" r="34" fill="none" stroke="#d8a23a" stroke-width="6" stroke-linecap="round" transform="rotate(-90 40 40)"/>
           <path class="tick" d="M24 41 l11 11 l21 -23" fill="none" stroke="#b5452a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <b>주문 전달 완료</b>
+          <b>${hw ? '주문 전달 완료 🎃' : '주문 전달 완료'}</b>
+          ${hw ? '<p class="fx-hw-sub">Happy Halloween! 🍬 달콤하게 배달할게요</p>' : ''}
           <p>${who}${info.kinds}종 · ${escapeHtml(info.qty)} · ${info.total.toLocaleString('ko-KR')}원</p>
           ${info.note ? `<p class="fx-hint" style="color:#b5452a">${escapeHtml(info.note)}</p>` : ''}
           <p class="fx-hint">화면을 누르면 닫혀요</p>
